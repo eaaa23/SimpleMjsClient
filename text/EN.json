@@ -1,0 +1,232 @@
+{
+  "name": "English",
+
+  "title": "Mahjong Soul Lite",
+  "button": {
+    "settings": "Settings",
+    "confirm": "Confirm"
+  },
+  "settings": {
+    "language": "Language: ",
+    "apply": "Apply"
+  },
+  "login": {
+    "username": "Account: ",
+    "password": "Password: ",
+    "preserve_input": "Save username and password for next login",
+    "login": "Login"
+  },
+  "lobby": {
+    "button": {
+      "create_room": "Create Room",
+      "join_room": "Join Room"
+    },
+    "label": {
+      "room": "Room match"
+    },
+    "join_room": {
+      "title": "Join Room",
+      "id": "Room No.：",
+      "join": "Join"
+    },
+    "create_room": {
+      "title": "Create Room",
+      "player_count": {
+        "4": "4-Players",
+        "3": "3-Players",
+        "label": "Players"
+      },
+      "is_east": {
+        "True": "East",
+        "False": "South",
+        "label": "Game"
+      },
+      "time": {
+        "0": "3+5",
+        "1": "5+10",
+        "2": "5+20",
+        "3": "60+0",
+        "4": "300+0",
+        "label": "Thinking Time"
+      },
+      "init_point": "Initial Point",
+      "fandian": "1st Place Required Point",
+      "can_jifei": {
+        "True": "On",
+        "False": "Off",
+        "label": "Tobi"
+      },
+      "shiduan": {
+        "True": "On",
+        "False": "Off",
+        "label": "Open Tanyao"
+      },
+      "fanfu": {
+        "1": "1",
+        "2": "2",
+        "4": "4",
+        "label": "Han Require"
+      },
+      "ai_level": {
+        "1": "Easy",
+        "2": "Common",
+        "label": "Bot"
+      },
+      "create": "Create"
+    }
+  },
+  "room": {
+    "id": "Room No. {}",
+
+    "bot": "Bot",
+    "ready": {
+      "True": "Ready",
+      "False": "Not Ready"
+    },
+    "button": {
+      "add": "Add Bot",
+      "remove": "Kick Out",
+      "quit": "Quit Room",
+      "start": "Start Room",
+      "ready": "Ready",
+      "ready_cancel": "Cancel Ready"
+    }
+  },
+  "game": {
+    "player_count": {
+      "3": "3-Player",
+      "4": "4-Player"
+    },
+    "mode": {
+      "1": "4-Player East",
+      "2": "4-Player South",
+      "11": "3-Player East",
+      "12": "3-Player South"
+    },
+    "level": {
+      "1": "Novice",
+      "2": "Adept",
+      "3": "Expert",
+      "4": "Master",
+      "5": "Saint",
+      "7": "Celestial"
+    },
+    "room_level": {
+      "1": "Bronze",
+      "2": "Silver",
+      "3": "Gold",
+      "4": "Jade",
+      "5": "Throne"
+    },
+    "wind": {
+      "0": "E",
+      "1": "S",
+      "2": "W",
+      "3": "N"
+    },
+    "round": {
+      "0": "E-{}-{}",
+      "1": "S-{}-{}"
+    },
+    "remain": "Remain {}",
+    "confirm": "Confirm",
+    "win": {
+      "tsumo": "{} Tsumo",
+      "ron": "{} Ron",
+      "value": "{} Han   {} Fu   {} Points",
+      "value_yakuman": {
+        "1": "Yakuman {} Points",
+        "2": "2x Yakuman {} Points",
+        "3": "3x Yakuman {} Points",
+        "4": "4x Yakuman {} Points",
+        "5": "5x Yakuman {} Points",
+        "6": "6x Yakuman {} Points"
+      },
+      "yaku": {
+        "1": "Fully Concealed Hand",
+        "2": "Riichi",
+        "3": "Robbing Kan",
+        "4": "Rinshan",
+        "5": "Last Draw",
+        "6": "Last Discard",
+        "7": "Yakuhai: White Dragon",
+        "8": "Yakuhai: Green Dragon",
+        "9": "Yakuhai: Red Dragon",
+        "10": "Yakuhai: Seat Wind",
+        "11": "Yakuhai: Round Wind",
+        "12": "All Simples",
+        "13": "Identical Sequences",
+        "14": "Pinfu",
+        "15": "Chanta",
+        "16": "Straight",
+        "17": "Three-Colored Straight",
+        "18": "Double Riichi",
+        "19": "Three-Colored Triplets",
+        "20": "Three Kans",
+        "21": "All Triplets",
+        "22": "Three Concealed Triplets",
+        "23": "Small Three Dragons",
+        "24": "Terminals and Honors",
+        "25": "Seven Pairs",
+        "26": "Terminal in Each Meld",
+        "27": "Half Flush",
+        "28": "Identical Sequences Two Sets",
+        "29": "Flush",
+        "30": "One Shot",
+        "31": "Dora",
+        "32": "Red Dora",
+        "33": "Ura Dora",
+        "34": "Pei Dora",
+        "35": "Blessing of Heaven",
+        "36": "Blessing of Earth",
+        "37": "Big Three Dragons",
+        "38": "Four Concealed Triplets",
+        "39": "All Honors",
+        "40": "All Green",
+        "41": "All Terminals",
+        "42": "Thirteen Orphans",
+        "43": "Small Winds",
+        "44": "Four Kans",
+        "45": "Nine Gates",
+        "47": "Pure Nine Gates",
+        "48": "Single-Wait Four Concealed Triplets",
+        "49": "Thirteen-Waits Thirteen Orphans",
+        "50": "Big Winds"
+      },
+      "yakuman_line": "    {}",
+      "yaku_line": "    {} {}Han"
+    },
+    "operation": {
+      "chi": "Chi",
+      "pong": "Pong",
+      "minggang": "Kan",
+      "angang": "Self Kan",
+      "addgang": "Add Kan",
+      "tsumo": "Tsumo",
+      "ron": "Ron",
+      "pei": "Pei",
+      "liqi": "Riichi",
+      "cancel": "Skip"
+    },
+    "result": "{} place: {} {} Points  {:+.1f}  {}pt"
+  },
+  "error": {
+    "error_code": "Error Code: {}",
+    "login": {
+      "title": "Login Error",
+      "default": "Login Error",
+      "code": {
+        "1002": "Username and password cannot be empty",
+        "1003": "Username or password incorrect"
+      }
+    },
+    "room_id": {
+      "title": "Invalid Room No.",
+      "text": "Room No. must be a number"
+    },
+    "point": {
+      "title": "Invalid Point",
+      "text": "Point must be a number, minimum unit 100, maximum value 200000"
+    }
+  }
+}
