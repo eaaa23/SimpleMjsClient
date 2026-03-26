@@ -66,10 +66,20 @@ class BlankScreen(AbstractScreen):
     pass
 
 
-def get_settings_button(parent, screen):
-    def open_settings_window():
-        screen.new_window(SettingScreen)
-    return tk.Button(parent, command=open_settings_window)
+class SettingsButton:
+    def __init__(self, parent, screen: AbstractScreen):
+        self.parent = parent
+        self.screen = screen
+        self.button = tk.Button(parent, command=self.on_click)
+
+    def on_click(self):
+        self.screen.new_window(SettingScreen)
+
+    def grid(self, row, column, **kwargs):
+        self.button.grid(row=row, column=column)
+
+    def update_text(self):
+        self.button.config(text=tr("button.settings"))
 
 
 class LoginScreen(AbstractScreen):
@@ -102,7 +112,7 @@ class LoginScreen(AbstractScreen):
         self.login_button = tk.Button(self.frame, command=self.login)
         self.login_button.grid(row=3, column=1)
 
-        self.settings_button = get_settings_button(self.frame, self)
+        self.settings_button = SettingsButton(self.frame, self)
         self.settings_button.grid(row=4, column=2)
 
         self.update_text()
@@ -113,7 +123,7 @@ class LoginScreen(AbstractScreen):
     def update_text(self):
         self.label_username.config(text=tr("login.username"))
         self.label_password.config(text=tr("login.password"))
-        self.settings_button.config(text=tr("button.settings"))
+        self.settings_button.update_text()
         self.checkbutton_preserve_input.config(text=tr("login.preserve_input"))
         self.login_button.config(text=tr("login.login"))
 
@@ -208,6 +218,9 @@ class LobbyScreen(AbstractScreen):
         self.button_join_room = tk.Button(self.room_frame, command=partial(self.new_window, JoinRoomScreen))
         self.button_join_room.grid(row=0, column=2)
 
+        self.settings_button = SettingsButton(self.frame, self)
+        self.settings_button.grid(row=row+1, column=3)
+
         self.update_text()
 
     def get_account_info_text(self, player_count: int) -> str:
@@ -227,6 +240,8 @@ class LobbyScreen(AbstractScreen):
         self.label_room.config(text=tr("lobby.label.room"))
         self.button_create_room.config(text=tr("lobby.button.create_room"))
         self.button_join_room.config(text=tr("lobby.button.join_room"))
+
+        self.settings_button.update_text()
 
 
 
@@ -456,6 +471,9 @@ class RoomScreen(AbstractScreen):
             new_seat_frame.grid(row=1, column=c)
             self.seat_frames.append(RoomSeatFrame(new_seat_frame, ui, c))
 
+        self.settings_button = SettingsButton(self.frame, self)
+        self.settings_button.grid(row=2, column=self.client.room.player_count)
+
         self.update_text()
 
     def ready_or_start_button_clicked(self):
@@ -474,9 +492,7 @@ class RoomScreen(AbstractScreen):
             self.button_ready_or_start.config(text=tr("room.button.ready_cancel") if self.client.room.me().ready else tr("room.button.ready"))
         for subframe in self.seat_frames:
             subframe.update()
-
-
-
+        self.settings_button.update_text()
 
 
 
