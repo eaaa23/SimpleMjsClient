@@ -44,7 +44,7 @@ class _ImageManager:
 
 
 Img: _ImageManager = _ImageManager()
-Img.load_directory("./assets")
+Img.load_directory("assets")
 
 
 ROTATION_MATRICES: list[Callable[[int, int], tuple[int, int]]] = [

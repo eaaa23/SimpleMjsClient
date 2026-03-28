@@ -8,7 +8,7 @@ from typing import Any
 from .language import get_available_languages
 
 
-CONFIG_PATH = "./config.json"
+CONFIG_PATH = "config.json"
 
 
 class SensitiveStr:
