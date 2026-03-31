@@ -2,7 +2,7 @@ import os
 import json
 from json import JSONDecodeError
 
-TEXT_FOLDER = "./text"
+TEXT_FOLDER = "text"
 
 _languages: dict[str, dict] = {}
 _current_lang = ""
@@ -15,12 +15,12 @@ def load_languages():
         file_loc = os.path.join(TEXT_FOLDER, filename)
         if filename.endswith('.json') and os.path.isfile(os.path.join(TEXT_FOLDER, filename)):
             try:
-                with open(file_loc) as fp:
+                with open(file_loc, encoding="utf-8") as fp:
                     data = json.load(fp)
                     lang = filename.strip('.json')
                     _languages[lang] = data
                     _name_to_lang[data["name"]] = lang
-            except (JSONDecodeError, AttributeError):
+            except (JSONDecodeError, UnicodeDecodeError, AttributeError):
                 pass
 
 load_languages()

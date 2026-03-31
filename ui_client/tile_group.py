@@ -12,8 +12,8 @@ from mjs_client.game.gamephase import GamePhase
 from mjs_client.game.gamestate import GameState, Open, OpenType, Discard
 from mjs_client.game.operation import AbstractOperation, PlayTile, Liqi, AbstractCallOperation
 
-from image import abs_anchor, Img, ROTATION_MATRICES
-from operation_buttons import OperationButtonGroup
+from .image import abs_anchor, Img, ROTATION_MATRICES
+from .operation_buttons import OperationButtonGroup
 
 
 @dataclass

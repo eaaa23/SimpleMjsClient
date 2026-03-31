@@ -17,11 +17,11 @@ from mjs_client.room import Room
 from mjs_client.level import get_match_level_dict
 from mjs_client.rule import DetailRule, is_valid_point, get_default_rule
 
-from image import Img, ROTATION_MATRICES, abs_anchor
-from operation_buttons import OperationButtonGroup
-from tile_group import AbstractTileGroup, HandTileGroup, DiscardTileGroup, TileInfo, DoraGroup, CallSelectionGroup
-from config import config
-from language import tr, get_available_languages, get_language_from_name
+from .image import Img, ROTATION_MATRICES, abs_anchor
+from .operation_buttons import OperationButtonGroup
+from .tile_group import AbstractTileGroup, HandTileGroup, DiscardTileGroup, TileInfo, DoraGroup, CallSelectionGroup
+from .config import config
+from .language import tr, get_available_languages, get_language_from_name
 
 
 class AbstractScreen:

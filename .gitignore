@@ -1,6 +1,11 @@
 .DS_Store
+**/.DS_Store
 config.json
-.tmp/**
+.tmp
 .idea/**
-__pycache__/**
+__pycache__
 **/__pycache__/**
+build
+dist
+.eggs
+icon/makeicon.iconset

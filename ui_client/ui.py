@@ -8,9 +8,9 @@ from mjs_client.client import MahjongSoulClient
 from mjs_client.controller import ClientController
 from mjs_client.exceptions import MjsError
 
-from config import Config, get_config, config
-from screen import AbstractScreen, LoginScreen, MAIN_SCREENS, BlankScreen
-from language import set_language, tr, TEXT_FOLDER
+from .config import Config, get_config, config
+from .screen import AbstractScreen, LoginScreen, MAIN_SCREENS, BlankScreen
+from .language import set_language, tr, TEXT_FOLDER
 
 class UI:
     def __init__(self):

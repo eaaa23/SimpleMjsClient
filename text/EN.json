@@ -26,7 +26,7 @@
     },
     "join_room": {
       "title": "Join Room",
-      "id": "Room No.：",
+      "id": "Room No. ",
       "join": "Join"
     },
     "create_room": {
