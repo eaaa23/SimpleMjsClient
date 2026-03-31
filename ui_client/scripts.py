@@ -8,7 +8,7 @@ from enum import IntEnum
 from dataclasses import dataclass
 
 from script_api import AbstractScript
-from language import get_language
+from .language import get_language
 
 SCRIPT_FOLDER = "scripts"
 
