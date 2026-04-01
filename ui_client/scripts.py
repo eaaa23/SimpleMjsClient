@@ -20,16 +20,24 @@ def _get_name(obj):
     return obj.NAME_LOCALIZED.get(get_language(), obj.NAME)
 
 
-class ScriptWrapper:
+
+
+class ScriptClassWrapper:
     def __init__(self, script_class):
-        self.script_instance: AbstractScript = script_class()
+        self.script_class = script_class
 
     def get_name(self) -> str:
-        name_config = _get_name(self.script_instance)
+        name_config = _get_name(self.script_class)
         if name_config:
             return name_config
         else:
-            return type(self.script_instance).__name__
+            return type(self.script_class).__name__
+
+    def __call__(self, **kwargs) -> AbstractScript | None:
+        try:
+            return self.script_class(**kwargs)
+        except:
+            return None
 
 
 class PackageWrapper:
@@ -37,7 +45,7 @@ class PackageWrapper:
         self.name = package_name
         self.package = package
         self.is_default = package_name == "default"
-        self.scripts: list[ScriptWrapper] = []
+        self.scripts: list[ScriptClassWrapper] = []
 
         if not hasattr(package, "NAME") or not isinstance(package.NAME, str):
             return
@@ -54,7 +62,7 @@ class PackageWrapper:
         for script_class in package.SCRIPT_CLASSES:
             if isinstance(script_class, type) and issubclass(script_class, AbstractScript):
                 try:
-                    script_wrapper = ScriptWrapper(script_class)
+                    script_wrapper = ScriptClassWrapper(script_class)
                 except Exception as e:
                     self.log(e)
                 else:

@@ -257,7 +257,7 @@ class GameActionHandler:
                 break
         #logging.info(f"Debug-gamestate: my_hand={self.game_state.my_hand}")
 
-    def get_possible_operations(self, data) -> dict[int, list[AbstractOperation]]:
+    def get_possible_operations(self, data) -> dict[OperationType, list[AbstractOperation]]:
         retval = {}
         if hasattr(data, "operation"):
             for op in data.operation.operation_list:

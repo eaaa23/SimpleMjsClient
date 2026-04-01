@@ -6,7 +6,7 @@ from ..const import OperationType
 
 
 class AbstractOperation:
-    code: int = -1
+    code: OperationType = -1
     async def perform(self, fasttest: FastTest):
         await fasttest.input_operation(pb.ReqSelfOperation(type=self.code))
 
