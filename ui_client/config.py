@@ -40,11 +40,24 @@ class SensitiveStr:
 
 
 @dataclass
+class AutoBotItemInfo:
+    package_name: str
+    class_name: str
+
+
+@dataclass
+class AutoBotInfo:
+    name: str
+    items: list[AutoBotItemInfo]
+
+
+@dataclass
 class Config:
     lang: str = field(default_factory=lambda: get_available_languages()[0])
     username: SensitiveStr = field(default_factory=SensitiveStr)
     password: SensitiveStr = field(default_factory=SensitiveStr)
     preserve_login: bool = False
+    autobots: list[AutoBotInfo] = field(default_factory=list)
 
     def save(self, config_path: str = CONFIG_PATH):
         with open(config_path, 'w') as fp:

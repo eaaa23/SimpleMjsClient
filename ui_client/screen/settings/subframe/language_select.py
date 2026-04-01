@@ -8,8 +8,8 @@ from .. import SettingsSubframe
 
 
 class LanguageSelectFrame(SettingsSubframe):
-    def __init__(self, parent, ui):
-        super().__init__(parent, ui)
+    def __init__(self, parent, screen):
+        super().__init__(parent, screen)
 
         self.language_select_label = tk.Label(self.parent)
         self.language_select_label.grid(row=0, column=0)

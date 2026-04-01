@@ -7,10 +7,11 @@ from ..abstract import AbstractScreen
 from .subframe import SettingsSubframe
 from .subframe.language_select import LanguageSelectFrame
 from .subframe.scripts import ScriptsFrame
+from .subframe.autobot import AutoBotConfigFrame
 
 
 class SettingScreen(AbstractScreen):
-    SUBFRAME_CLASSES = [LanguageSelectFrame, ScriptsFrame]
+    SUBFRAME_CLASSES = [LanguageSelectFrame, ScriptsFrame, AutoBotConfigFrame]
     def __init__(self, parent, ui):
         super().__init__(parent, ui)
 
@@ -18,8 +19,8 @@ class SettingScreen(AbstractScreen):
         self.subframes: list[SettingsSubframe] = []
         for row, subframe_class in enumerate(self.SUBFRAME_CLASSES):
             new_tk_frame = tk.Frame(self.frame)
-            new_tk_frame.grid(row=row, column=0)
-            self.subframes.append(subframe_class(new_tk_frame, self.ui))
+            new_tk_frame.grid(row=row, column=0, sticky="w")
+            self.subframes.append(subframe_class(new_tk_frame, self))
 
         self.apply_button = tk.Button(self.frame, command=self.apply)
         self.apply_button.grid(row=row+1, column=1, sticky=tk.SE)

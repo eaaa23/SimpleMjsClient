@@ -1,7 +1,11 @@
+from ...abstract import AbstractScreen
+
+
 class SettingsSubframe:
-    def __init__(self, parent, ui):
+    def __init__(self, parent, screen):
         self.parent = parent
-        self.ui = ui
+        self.ui = screen.ui
+        self.screen: AbstractScreen = screen
 
     def apply(self):
         pass

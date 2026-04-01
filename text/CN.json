@@ -37,6 +37,19 @@
         "remove_default": "内置脚本包不能被删除"
       }
     },
+    "autobot": {
+      "label": "机器人",
+      "display": {
+        "title": "机器人列表",
+        "add": "添加机器人...",
+        "config": "修改配置",
+        "delete": "删除机器人"
+      },
+      "config": {
+        "title": "机器人配置"
+      },
+      "entry": "设置..."
+    },
     "apply": "应用"
   },
   "login": {

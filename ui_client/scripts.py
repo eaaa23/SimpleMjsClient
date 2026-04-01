@@ -23,8 +23,9 @@ def _get_name(obj):
 
 
 class ScriptClassWrapper:
-    def __init__(self, script_class):
+    def __init__(self, script_class, package_wrapper):
         self.script_class = script_class
+        self.package_wrapper: PackageWrapper = package_wrapper
 
     def get_name(self) -> str:
         name_config = _get_name(self.script_class)
@@ -62,7 +63,7 @@ class PackageWrapper:
         for script_class in package.SCRIPT_CLASSES:
             if isinstance(script_class, type) and issubclass(script_class, AbstractScript):
                 try:
-                    script_wrapper = ScriptClassWrapper(script_class)
+                    script_wrapper = ScriptClassWrapper(script_class, self)
                 except Exception as e:
                     self.log(e)
                 else:

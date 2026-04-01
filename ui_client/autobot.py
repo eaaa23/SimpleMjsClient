@@ -7,7 +7,6 @@ from mjs_client.game.operation import AbstractOperation
 
 from script_api import AbstractScript, OperationEvaluation
 
-from .scripts import ScriptClassWrapper
 
 
 class BotItemMode(IntEnum):
@@ -31,7 +30,8 @@ class BotItem:
 
 
 class AutoBot:
-    def __init__(self):
+    def __init__(self, name: str):
+        self.name = name
         self.items: list[BotItem] = []
 
     def add_item(self, item: BotItem):
@@ -84,7 +84,3 @@ class AutoBot:
             return operations_flattened[selected_id]
         else:
             return None
-
-
-
-
