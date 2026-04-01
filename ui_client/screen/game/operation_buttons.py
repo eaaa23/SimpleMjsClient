@@ -6,7 +6,7 @@ from mjs_client.const import OperationType
 from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation
 
-from .language import tr
+from ...language import tr
 
 
 class AbstractOperationButton:
