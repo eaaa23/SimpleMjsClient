@@ -1,9 +1,9 @@
 import os
 import json
 from base64 import b64encode, b64decode
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, fields, asdict, is_dataclass
 from json import JSONDecodeError
-from typing import Any
+from typing import Any, get_args, get_origin
 
 from .language import get_available_languages
 
@@ -41,9 +41,9 @@ class SensitiveStr:
 
 @dataclass
 class AutoBotItemInfo:
-    package_name: str
-    class_name: str
-    threshold: float
+    package_name: str = ""
+    class_name: str = ""
+    threshold: float = 0.0
 
 
 @dataclass
@@ -66,11 +66,33 @@ class Config:
                                                               for key, value in data}), fp)
 
 
+def _translate_list(lst: list, type_: type) -> list:
+    if not lst:
+        return []
+    if isinstance(lst[0], dict):
+        obj_type = get_args(type_)[0]
+        retval = []
+        for item in lst:
+            new_obj = obj_type()
+            copy_json_to_object(item, new_obj)
+            retval.append(new_obj)
+        return retval
+    assert isinstance(lst[0], list)
+    return [_translate_list(item, get_args(type_)[0]) for item in lst]
 
-def copy_json_to_dataclass(json_obj: dict[str, Any], dst):
+
+def copy_json_to_object(json_obj: dict[str, Any], dst):
     for key, value in json_obj.items():
         if isinstance(value, dict):
-            copy_json_to_dataclass(value, getattr(dst, key))
+            copy_json_to_object(value, getattr(dst, key))
+        elif isinstance(value, list):
+            if is_dataclass(dst):
+                for field_ in fields(dst):
+                    if field_.name == key:
+                        setattr(dst, key, _translate_list(value, field_.type))
+                        break
+            else:
+                setattr(dst, key, value)
         else:
             setattr(dst, key, value)
 
@@ -83,7 +105,7 @@ def get_config(config_path: str = CONFIG_PATH) -> Config:
                 json_obj = json.load(fp)
             except (JSONDecodeError, UnicodeDecodeError):
                 return retval
-        copy_json_to_dataclass(json_obj, retval)
+        copy_json_to_object(json_obj, retval)
 
     return retval
 

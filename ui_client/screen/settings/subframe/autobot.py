@@ -1,6 +1,6 @@
 import tkinter as tk
+from tkinter import messagebox
 from functools import partial
-from tkinter import ttk
 
 from .scripts import ScriptsTreeviewList
 from ....config import config, AutoBotInfo
@@ -50,13 +50,18 @@ class BotDisplayScreen(AbstractScreen):
         self.bots_treeview_list.reset(config.autobots)
 
     def on_add_button_click(self):
-        self.new_window(BotConfigScreen, True)
+        self.new_window(BotConfigScreen, autobot_info=None)
 
     def on_config_button_click(self):
-        self.new_window(BotConfigScreen, False)
+        selected_items = self.bots_treeview_list.get_selected_items()
+        if selected_items:
+            self.new_window(BotConfigScreen, autobot_info=selected_items[0])
 
     def on_remove_button_click(self):
-        pass
+        selected_indexes = self.bots_treeview_list.get_selected_indexes()
+        if selected_indexes:
+            del config.autobots[selected_indexes[0]]
+            self.bots_treeview_list.remove_selected()
 
 
 class BotConfigScreen(AbstractScreen):
@@ -121,6 +126,8 @@ class BotConfigScreen(AbstractScreen):
         self.save_button.grid(row=1, column=0, sticky="se")
 
         self.script_select_treeview_list.reset_to(self.scripts_manager)
+        self.bot_name_var.set(self.autobot_info.name)
+        self.bot_items_treeview_list.reset(self.autobot_info.items)
         self.update_text()
 
     def update_text(self):
@@ -146,10 +153,45 @@ class BotConfigScreen(AbstractScreen):
 
         self.save_button.config(text=tr("settings.autobot.config.save"))
 
+    def save(self) -> bool:
+        bot_name = self.bot_name_var.get()
+        if not bot_name:
+            messagebox.showerror(tr("settings.autobot.config.dialog.title_error"),
+                                 tr("settings.autobot.config.dialog.empty_name"))
+            return False
+        for bot_info in config.autobots:
+            if bot_info.name == bot_name and bot_info is not self.autobot_info:
+                messagebox.showerror(tr("settings.autobot.config.dialog.title_error"),
+                                     tr("settings.autobot.config.dialog.name_conflict"))
+                return False
+
+        bot_items = self.bot_items_treeview_list.get_items()
+        if not bot_items:
+            messagebox.showerror(tr("settings.autobot.config.dialog.title_error"),
+                                 tr("settings.autobot.config.dialog.no_items"))
+            return False
+
+        self.autobot_info.name = bot_name
+        self.autobot_info.items = bot_items
+        if self.is_new_bot:
+            config.autobots.append(self.autobot_info)
+            self.is_new_bot = False
+        config.save()
+        return True
+
     def save_and_quit(self):
-        config.autobots.append(AutoBotInfo(name=self.bot_name_var.get(),
-                                           items=self.bot_items_treeview_list.get_items()))
-        self.close()
+        if self.save():
+            self.close()
+
+    def on_user_shut_window(self) -> bool:
+        res = messagebox.askyesnocancel(tr("settings.autobot.config.dialog.title_warning"),
+                                        tr("settings.autobot.config.dialog.save"))
+        if res is True:
+            return self.save()
+        elif res is False:
+            return True
+        else: # res is None
+            return False
 
     def script_add_button_clicked(self):
         selected_items = self.script_select_treeview_list.get_selected_items()

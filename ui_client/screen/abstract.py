@@ -29,14 +29,29 @@ class AbstractScreen:
             self.toplevels.pop(id(new_window))
             self.update()
 
-        new_screen = screen_type(new_window, self.ui, *args, **kwargs)
+        new_screen: AbstractScreen = screen_type(new_window, self.ui, *args, **kwargs)
         new_screen.set_destroy_callback(on_closing_callback)
-        new_window.protocol("WM_DELETE_WINDOW", new_screen.destroy)
+
+        new_window.protocol("WM_DELETE_WINDOW", new_screen._user_shut_window_protocol_callback)
 
         self.toplevels[id(new_window)] = new_screen
 
     def on_destroy(self):
+        """
+        To be called on:
+        1. screen change (main screens)
+        2. user click on "X" button of the window (Non-main screens)
+        3. called close() (Non-main screens)
+        """
         pass
+
+    def on_user_shut_window(self) -> bool:
+        """
+        Affect non-main screens only.
+        Only called on user click on "X" button of the window.
+        :return: agree to shut the window or not.
+        """
+        return True
 
     def destroy(self):
         self.on_destroy()
@@ -47,6 +62,10 @@ class AbstractScreen:
     def close(self):
         self.destroy()
         self.parent.destroy()
+
+    def _user_shut_window_protocol_callback(self):
+        if self.on_user_shut_window():
+            self.close()
 
     def update(self):
         self.update_text()
