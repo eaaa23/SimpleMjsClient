@@ -7,11 +7,11 @@ from ..abstract import AbstractScreen
 from .subframe import SettingsSubframe
 from .subframe.language_select import LanguageSelectFrame
 from .subframe.scripts import ScriptsFrame
-from .subframe.autobot import AutoBotConfigFrame
+from .subframe.autobot import AutoBotSettingsFrame
 
 
 class SettingScreen(AbstractScreen):
-    SUBFRAME_CLASSES = [LanguageSelectFrame, ScriptsFrame, AutoBotConfigFrame]
+    SUBFRAME_CLASSES = [LanguageSelectFrame, ScriptsFrame, AutoBotSettingsFrame]
     def __init__(self, parent, ui):
         super().__init__(parent, ui)
 

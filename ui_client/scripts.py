@@ -8,6 +8,7 @@ from enum import IntEnum
 from dataclasses import dataclass
 
 from script_api import AbstractScript
+from .config import AutoBotItemInfo
 from .language import get_language
 
 SCRIPT_FOLDER = "scripts"
@@ -32,7 +33,7 @@ class ScriptClassWrapper:
         if name_config:
             return name_config
         else:
-            return type(self.script_class).__name__
+            return self.script_class.__name__
 
     def __call__(self, **kwargs) -> AbstractScript | None:
         try:
@@ -40,13 +41,18 @@ class ScriptClassWrapper:
         except:
             return None
 
+    def to_item_info(self, threshold: float = 0.0) -> AutoBotItemInfo:
+        return AutoBotItemInfo(package_name=self.package_wrapper.name,
+                               class_name=self.script_class.__name__,
+                               threshold=threshold)
+
 
 class PackageWrapper:
     def __init__(self, package_name: str, package):
         self.name = package_name
         self.package = package
         self.is_default = package_name == "default"
-        self.scripts: list[ScriptClassWrapper] = []
+        self.scripts: dict[str, ScriptClassWrapper] = {}
 
         if not hasattr(package, "NAME") or not isinstance(package.NAME, str):
             return
@@ -67,7 +73,7 @@ class PackageWrapper:
                 except Exception as e:
                     self.log(e)
                 else:
-                    self.scripts.append(script_wrapper)
+                    self.scripts[script_class.__name__] = script_wrapper
 
     def log(self, e):
         ...
@@ -183,4 +189,20 @@ class PackageScriptManager:
         for subpath in self.script_folder.glob("*"):
             self.load_script(subpath.name)
 
+    def check_bot_item_info_valid(self, bot_item_info: AutoBotItemInfo) -> bool:
+        return (bot_item_info.package_name in self.packages and
+                bot_item_info.class_name in self.packages[bot_item_info.package_name].scripts)
 
+    def get_package_name(self, bot_item_info: AutoBotItemInfo) -> str:
+        return self.packages[bot_item_info.package_name].get_name() if bot_item_info.package_name in self.packages else bot_item_info.package_name
+
+    def find_class_from_bot_item_info(self, bot_item_info: AutoBotItemInfo) -> ScriptClassWrapper | None:
+        return self.packages[bot_item_info.package_name].scripts[bot_item_info.class_name] \
+            if self.check_bot_item_info_valid(bot_item_info) else None
+
+    def get_class_name(self, bot_item_info: AutoBotItemInfo) -> str:
+        cls_wrapper = self.find_class_from_bot_item_info(bot_item_info)
+        if cls_wrapper is None:
+            return bot_item_info.class_name
+        else:
+            return cls_wrapper.get_name()

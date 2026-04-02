@@ -43,12 +43,13 @@ class SensitiveStr:
 class AutoBotItemInfo:
     package_name: str
     class_name: str
+    threshold: float
 
 
 @dataclass
 class AutoBotInfo:
-    name: str
-    items: list[AutoBotItemInfo]
+    name: str = ""
+    items: list[AutoBotItemInfo] = field(default_factory=list)
 
 
 @dataclass

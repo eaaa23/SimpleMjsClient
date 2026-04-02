@@ -1,12 +1,29 @@
 import logging
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+from typing import Callable, Any
 
 from ...treeview_list import TreeviewList, TreeviewColumn
 from ....language import tr
 from ....scripts import PackageScriptManager, PackageWrapper, LoadPackageCode, ScriptClassWrapper
 
 from .. import SettingsSubframe
+
+
+class ScriptsTreeviewList(TreeviewList):
+    COLUMNS = (TreeviewColumn("script", lambda item: item.get_name()),
+               TreeviewColumn("source", lambda item: item.package_wrapper.get_name()))
+
+    def __init__(self, parent, *, tag_seeker: Callable[[Any], str] = None, **kwargs):
+        super().__init__(parent, self.COLUMNS, tag_seeker=tag_seeker, **kwargs)
+
+    def reset_to(self, scripts_manager: PackageScriptManager):
+        self.reset([s for package_wrapper in scripts_manager.packages.values()
+                    for s in package_wrapper.scripts.values()])
+
+    def update_heading(self):
+        self.heading("script", text=tr("settings.scripts.heading.script"))
+        self.heading("source", text=tr("settings.scripts.heading.source"))
 
 
 class ScriptsFrame(SettingsSubframe):
@@ -17,10 +34,7 @@ class ScriptsFrame(SettingsSubframe):
         self.scripts_label = tk.Label(self.parent)
         self.scripts_label.grid(row=0, column=0)
 
-        self.scripts_treeview_list = TreeviewList(self.parent,
-                                                  columns=(TreeviewColumn("script", lambda item: item.get_name()),
-                                                      TreeviewColumn("source", lambda item: item.package_wrapper.get_name())),
-                                                  )
+        self.scripts_treeview_list = ScriptsTreeviewList(self.parent)
         self.scripts_treeview_list.grid(row=0, column=1)
 
         self.button_frame = tk.Frame(self.parent)
@@ -35,7 +49,7 @@ class ScriptsFrame(SettingsSubframe):
         self.script_resync_button = tk.Button(self.button_frame, command=self.resync_script)
         self.script_resync_button.grid(row=0, column=2)
 
-        self.resync_script()
+        self.scripts_treeview_list.reset_to(self.scripts_manager)
 
 
     def apply(self):
@@ -44,8 +58,7 @@ class ScriptsFrame(SettingsSubframe):
     def update_text(self):
         self.scripts_label.config(text=tr("settings.scripts.label"))
 
-        self.scripts_treeview_list.heading("script", text=tr("settings.scripts.heading.script"))
-        self.scripts_treeview_list.heading("source", text=tr("settings.scripts.heading.source"))
+        self.scripts_treeview_list.update_heading()
 
         self.script_add_button.config(text=tr("settings.scripts.button.add"))
         self.script_remove_button.config(text=tr("settings.scripts.button.remove"))
@@ -102,5 +115,3 @@ class ScriptsFrame(SettingsSubframe):
 
     def resync_script(self):
         self.scripts_manager.sync_scripts_folder()
-        self.scripts_treeview_list.reset([s for package_wrapper in self.scripts_manager.packages.values()
-                                          for s in package_wrapper.scripts])

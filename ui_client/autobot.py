@@ -6,7 +6,8 @@ from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation
 
 from script_api import AbstractScript, OperationEvaluation
-
+from ui_client.config import AutoBotInfo, AutoBotItemInfo
+from ui_client.scripts import PackageScriptManager
 
 
 class BotItemMode(IntEnum):
@@ -18,7 +19,7 @@ class BotItemMode(IntEnum):
 class BotItem:
     script_inst: AbstractScript
     threshold: float
-    mode: BotItemMode
+    mode: BotItemMode = BotItemMode.DETERMINE
 
     def decision(self, operations: dict[OperationType, list[AbstractOperation]], game_state: GameState, operation_phase: int)\
         -> list[OperationEvaluation]:
@@ -29,11 +30,34 @@ class BotItem:
         return [evaluation for evaluation in script_evaluation if evaluation.value >= self.threshold]
 
 
-class AutoBot:
-    def __init__(self, name: str):
-        self.name = name
-        self.items: list[BotItem] = []
+class AutoBotInstantiationError(Exception):
+    pass
 
+class ScriptNotFound(AutoBotInstantiationError):
+    pass
+
+class ScriptInstanceInitFail(AutoBotInstantiationError):
+    pass
+
+
+class AutoBot:
+    def __init__(self, scripts_manager: PackageScriptManager, autobot_info: AutoBotInfo):
+        self.name = autobot_info.name
+
+        self.items: list[BotItem] = []
+        for item_info in autobot_info.items:
+            script_class_wrapper = scripts_manager.find_class_from_bot_item_info(item_info)
+            if script_class_wrapper is None:
+                raise ScriptNotFound(item_info)
+
+            try:
+                script_inst = script_class_wrapper.script_class()
+            except Exception as e:
+                raise ScriptInstanceInitFail(e)
+
+            self.items.append(BotItem(script_inst, item_info.threshold))
+
+    """
     def add_item(self, item: BotItem):
         self.items.append(item)
 
@@ -51,7 +75,7 @@ class AutoBot:
 
     def downgrade_item(self, idx: int):
         self._swap_item(idx, idx+1)
-
+    """
     def decision(self, operations: dict[OperationType, list[AbstractOperation]], game_state: GameState, operation_phase: int,
                  ) -> AbstractOperation | None:
         if not self.items:
