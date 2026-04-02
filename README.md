@@ -14,9 +14,10 @@
 - - culsans 0.11.0
 - - PIL 12.0.0
 - - protobuf 3.20.0 (protobuf must be this version)
+- - sortedcontainers
 
 Install:  
-`pip install websockets==15.0.1 aiohttp==3.9.0 culsans==0.11.0 pillow==12.0.0 protobuf==3.20.0`
+`pip install websockets==15.0.1 aiohttp==3.9.0 culsans==0.11.0 pillow==12.0.0 protobuf==3.20.0 sortedcontainers`
 
 
 ## Run
