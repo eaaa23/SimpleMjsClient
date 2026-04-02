@@ -76,6 +76,8 @@ class BotConfigScreen(AbstractScreen):
             self.is_new_bot = False
             self.autobot_info = autobot_info
 
+        self.modified = False
+
         self.bot_frame = tk.Frame(self.frame)
         self.bot_frame.grid(row=0, column=0)
 
@@ -189,8 +191,15 @@ class BotConfigScreen(AbstractScreen):
             self.close()
 
     def on_user_shut_window(self) -> bool:
-        res = messagebox.askyesnocancel(tr("settings.autobot.config.dialog.title_warning"),
+        if self.modified:
+            res = messagebox.askyesnocancel(tr("settings.autobot.config.dialog.title_warning"),
                                         tr("settings.autobot.config.dialog.save"))
+        else:
+            # Not modified, res should be False, but it's better to set it to True
+            # Prevent corner case when the list is changed but self.modified == False
+            # In this case it's better to save than not save.
+            res = True
+
         if res is True:
             return self.save()
         elif res is False:
@@ -204,9 +213,11 @@ class BotConfigScreen(AbstractScreen):
             return
         selected_class_wrapper: ScriptClassWrapper = selected_items[0]
         self.bot_items_treeview_list.append(selected_class_wrapper.to_item_info())
+        self.modified = True
 
     def remove_item_button_clicked(self):
         self.bot_items_treeview_list.remove_selected()
+        self.modified = True
 
     def _change_priority(self, offset: int):
         selected_indexes = self.bot_items_treeview_list.get_selected_indexes()
@@ -218,6 +229,7 @@ class BotConfigScreen(AbstractScreen):
             return
         self.bot_items_treeview_list.swap(selected_idx, swap_idx)
         self.bot_items_treeview_list.selection_set(swap_idx)
+        self.modified = True
 
     def uplift_item_button_clicked(self):
         self._change_priority(-1)
