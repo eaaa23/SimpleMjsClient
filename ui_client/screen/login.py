@@ -55,11 +55,9 @@ class LoginScreen(AbstractScreen):
         self.checkbutton_preserve_input.config(text=tr("login.preserve_input"))
         self.login_button.config(text=tr("login.login"))
 
-    def destroy(self):
+    def on_destroy(self):
         if self.var_preserve_input.get():
             config.username.raw = self.var_username.get()
             config.password.raw = self.var_password.get()
         config.preserve_login = self.var_preserve_input.get()
         self.ui.save_config()
-        self.frame.destroy()
-

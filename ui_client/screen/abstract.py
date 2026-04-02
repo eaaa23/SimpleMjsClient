@@ -1,4 +1,6 @@
 import tkinter as tk
+from collections.abc import Callable
+from typing import Any
 
 from mjs_client.client import ClientPhase, MahjongSoulClient
 from mjs_client.controller import ClientController
@@ -12,24 +14,39 @@ class AbstractScreen:
         self.controller: ClientController = ui.controller
         self.parent = parent
         self.toplevels: dict[int, AbstractScreen] = {}
+        self._on_destroy_callback: Callable[[], Any] | None = None
 
         self.frame = tk.Frame(parent)
         self.frame.pack()
 
+    def set_destroy_callback(self, callback: Callable[[], Any]):
+        self._on_destroy_callback = callback
 
     def new_window(self, screen_type, *args, **kwargs):
         new_window = tk.Toplevel(self.frame)
 
-        def on_closing():
-            self.toplevels[id(new_window)].destroy()
+        def on_closing_callback():
             self.toplevels.pop(id(new_window))
-            new_window.destroy()
-        new_window.protocol("WM_DELETE_WINDOW", on_closing)
+            self.update()
 
-        self.toplevels[id(new_window)] = screen_type(new_window, self.ui, *args, **kwargs)
+        new_screen = screen_type(new_window, self.ui, *args, **kwargs)
+        new_screen.set_destroy_callback(on_closing_callback)
+        new_window.protocol("WM_DELETE_WINDOW", new_screen.destroy)
+
+        self.toplevels[id(new_window)] = new_screen
+
+    def on_destroy(self):
+        pass
 
     def destroy(self):
+        self.on_destroy()
+        if self._on_destroy_callback:
+            self._on_destroy_callback()
         self.frame.destroy()
+
+    def close(self):
+        self.destroy()
+        self.parent.destroy()
 
     def update(self):
         self.update_text()

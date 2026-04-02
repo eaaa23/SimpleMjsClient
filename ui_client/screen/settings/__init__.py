@@ -38,7 +38,5 @@ class SettingScreen(AbstractScreen):
             subframe.update_text()
         self.apply_button.config(text=tr("settings.apply"))
 
-    def destroy(self):
+    def on_destroy(self):
         self.apply()
-        self.frame.destroy()
-

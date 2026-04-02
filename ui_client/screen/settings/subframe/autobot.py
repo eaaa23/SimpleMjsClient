@@ -34,9 +34,8 @@ class BotDisplayScreen(AbstractScreen):
         self.bot_remove_button = tk.Button(self.button_frame, command=self.on_remove_button_click)
         self.bot_remove_button.grid(row=0, column=2)
 
-        self.bots_treeview_list.reset(config.autobots)
-
         self.update_text()
+        self.update()
 
     def update_text(self):
         self.parent.title(tr("settings.autobot.display.title"))
@@ -46,6 +45,9 @@ class BotDisplayScreen(AbstractScreen):
         self.bot_add_button.config(text=tr("settings.autobot.display.add"))
         self.bot_config_button.config(text=tr("settings.autobot.display.config"))
         self.bot_remove_button.config(text=tr("settings.autobot.display.remove"))
+
+    def update(self):
+        self.bots_treeview_list.reset(config.autobots)
 
     def on_add_button_click(self):
         self.new_window(BotConfigScreen, True)
@@ -145,7 +147,9 @@ class BotConfigScreen(AbstractScreen):
         self.save_button.config(text=tr("settings.autobot.config.save"))
 
     def save_and_quit(self):
-        self.parent.destroy()
+        config.autobots.append(AutoBotInfo(name=self.bot_name_var.get(),
+                                           items=self.bot_items_treeview_list.get_items()))
+        self.close()
 
     def script_add_button_clicked(self):
         selected_items = self.script_select_treeview_list.get_selected_items()
