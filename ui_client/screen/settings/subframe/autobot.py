@@ -122,8 +122,11 @@ class BotConfigScreen(AbstractScreen):
         self.script_add_button = tk.Button(self.script_select_frame, command=self.script_add_button_clicked)
         self.script_add_button.grid(row=2, column=0)
 
+        self.instruction_label = tk.Label(self.frame)
+        self.instruction_label.grid(row=1, column=0)
+
         self.save_button = tk.Button(self.frame, command=self.save_and_quit)
-        self.save_button.grid(row=1, column=0, sticky="se")
+        self.save_button.grid(row=2, column=0, sticky="se")
 
         self.script_select_treeview_list.reset_to(self.scripts_manager)
         self.bot_name_var.set(self.autobot_info.name)
@@ -150,6 +153,8 @@ class BotConfigScreen(AbstractScreen):
         self.script_select_treeview_list.update_heading()
 
         self.script_add_button.config(text=tr("settings.autobot.config.add"))
+
+        self.instruction_label.config(text=tr("settings.autobot.config.instruction"))
 
         self.save_button.config(text=tr("settings.autobot.config.save"))
 
