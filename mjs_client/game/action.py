@@ -12,7 +12,7 @@ from ..exceptions import GameError
 
 
 class OperationPhase(IntEnum):
-    DEFAULT = -1
+    NO_OPERATION = -1
     SELF_TURN = 0
     OTHER_PLAYED = 1
     AFTER_SELF_CPG = 2
@@ -30,7 +30,7 @@ class AbstractGameAction:
         return self.step < other.step
 
     def update(self, game_state: GameState) -> int:
-        return OperationPhase.DEFAULT
+        return OperationPhase.NO_OPERATION
 
 class GameActionWithLiqiSuccess(AbstractGameAction):
     def update_liqi(self, game_state: GameState):
@@ -60,7 +60,7 @@ class ActionNewRound(AbstractGameAction):
         for seat in range(game_state.player_count):
             game_state.player_hand_size[seat] = (14 if seat == game_state.current_ju else 13)
         game_state.reset_player_info()
-        return OperationPhase.SELF_TURN if game_state.me_just_dealt_tile else OperationPhase.DEFAULT
+        return OperationPhase.SELF_TURN if game_state.me_just_dealt_tile else OperationPhase.NO_OPERATION
 
 
 class ActionDealTile(GameActionWithLiqiSuccess):
@@ -73,7 +73,7 @@ class ActionDealTile(GameActionWithLiqiSuccess):
         is_deal_after_angang = bool(self.data.doras)
         if not is_my_deal and not is_deal_after_angang:
             game_state.left_tile_count -= 1
-            return OperationPhase.DEFAULT
+            return OperationPhase.NO_OPERATION
         game_state.left_tile_count = self.data.left_tile_count
         if is_my_deal:
             game_state.my_hand.append(self.data.tile)
@@ -247,6 +247,7 @@ class GameActionHandler:
                 self.game_state.last_operation_is_deal = False
                 self.game_state.phase = GamePhase.IN_PROGRESS
                 operation_phase = this_action.update(self.game_state)
+                self.game_state.operation_phase = operation_phase
                 self.game_state.possible_operations = self.get_possible_operations(this_action.data)
                 self.action_queue.pop(0)
                 self.next_step += 1

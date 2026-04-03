@@ -1,11 +1,13 @@
+import logging
 from enum import IntEnum
 from dataclasses import dataclass
 
 from mjs_client.const import OperationType
+from mjs_client.game.action import OperationPhase
 from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation
 
-from script_api import AbstractScript, OperationEvaluation
+from script_api import AbstractScript, Evaluation
 from ui_client.config import AutoBotInfo, AutoBotItemInfo
 from ui_client.scripts import PackageScriptManager
 
@@ -20,12 +22,19 @@ class BotItem:
     script_inst: AbstractScript
     threshold: float
     mode: BotItemMode = BotItemMode.DETERMINE
+    faulty: bool = False
 
     def decision(self, operations: dict[OperationType, list[AbstractOperation]], game_state: GameState, operation_phase: int)\
-        -> list[OperationEvaluation]:
+        -> list[Evaluation]:
         try:
             script_evaluation = self.script_inst.decision(operations, game_state, operation_phase)
-        except:
+            if not isinstance(script_evaluation, (list, tuple)):
+                raise TypeError("not list or tuple")
+            if not all(isinstance(ev, Evaluation) for ev in script_evaluation):
+                raise TypeError("not Evaluation")
+        except Exception as e:
+            self.faulty = True
+            logging.error(f"Script Evaluation Fail: {e}")
             return []
         return [evaluation for evaluation in script_evaluation if evaluation.value >= self.threshold]
 
@@ -76,7 +85,7 @@ class AutoBot:
     def downgrade_item(self, idx: int):
         self._swap_item(idx, idx+1)
     """
-    def decision(self, operations: dict[OperationType, list[AbstractOperation]], game_state: GameState, operation_phase: int,
+    def decision(self, operations: dict[OperationType, list[AbstractOperation]], game_state: GameState, operation_phase: OperationPhase,
                  ) -> AbstractOperation | None:
         if not self.items:
             return None
@@ -88,7 +97,7 @@ class AutoBot:
         found_initial_candidates: bool = False
 
         for bot_item in self.items:
-            evaluations_list: list[OperationEvaluation] = bot_item.decision(operations, game_state, operation_phase)
+            evaluations_list: list[Evaluation] = bot_item.decision(operations, game_state, operation_phase)
 
             evaluations_id = set(id(evaluation.operation) for evaluation in evaluations_list)
 

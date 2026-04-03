@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -8,9 +9,9 @@ from mjs_client.game.action import OperationPhase
 
 
 @dataclass
-class OperationEvaluation:
+class Evaluation:
     operation: AbstractOperation
-    value: float = 0.0
+    value: float
 
 
 class AbstractScript(ABC):
@@ -18,7 +19,8 @@ class AbstractScript(ABC):
     NAME_LOCALIZED: dict[str, str] = {}
 
     def decision(self, operations: dict[OperationType, list[AbstractOperation]], game_state: GameState, operation_phase: int)\
-            -> list[OperationEvaluation]:
+            -> list[Evaluation]:
+        logging.info(f"in AbstractScript.decision")
         match operation_phase:
             case OperationPhase.SELF_TURN:
                 return self.self_turn(operations, game_state)

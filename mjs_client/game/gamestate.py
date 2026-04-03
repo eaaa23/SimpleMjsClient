@@ -80,6 +80,7 @@ class GameState:
         self.game_result: list[EndResult] = []
 
         self.possible_operations: dict[int, list] = {}
+        self.operation_phase: int = -1
         self._all_visible_tiles34: list[int] = [0]*34
 
     def reset_player_info(self):

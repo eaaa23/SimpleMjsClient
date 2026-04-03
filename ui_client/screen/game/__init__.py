@@ -2,6 +2,7 @@ import logging
 import tkinter as tk
 
 from mjs_client.client import ClientPhase
+from mjs_client.game.action import OperationPhase
 from mjs_client.game.game import Game
 from mjs_client.game.gamephase import GamePhase
 from mjs_client.game.gamestate import GameState
@@ -161,8 +162,18 @@ class GameScreen(AbstractScreen):
         self.assistant.update_text()
 
     def update(self):
-        self.operation_button_group.update()
-        self.call_selection_subframe.clear()
+        if self.assistant.running_bot is None:
+            self.operation_button_group.update()
+            self.call_selection_subframe.clear()
+        else:
+            operation_phase = self.game_state.operation_phase
+            logging.info(f"{operation_phase=}")
+            if operation_phase != OperationPhase.NO_OPERATION:
+                decision = self.assistant.running_bot.decision(self.game_state.possible_operations, self.game_state, self.game_state.operation_phase)
+                logging.info(f"AutoBot Decision: {decision}")
+                if decision is not None:
+                    self.controller.game_put_operation(decision)
+
         for rotation in range(4):
             self.hand_tile_groups[rotation].redraw()
             self.discard_groups[rotation].redraw()
