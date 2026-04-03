@@ -279,7 +279,18 @@
       "liqi": "立直",
       "cancel": "跳过"
     },
-    "result": "{}位：{} {}点  {:+.1f}  {}pt"
+    "result": "{}位：{} {}点  {:+.1f}  {}pt",
+    "assistant": {
+      "bot_select": "选择机器人",
+      "start": "启动",
+      "stop": "停止",
+      "running": "正在运行：{}",
+      "dialog": {
+        "title_error": "错误",
+        "script_not_found": "该机器人含有本地不存在的脚本{}.{}",
+        "init_error": "{}包中的脚本{}初始化出错"
+      }
+    }
   },
   "error": {
     "error_code": "错误码：{}",

@@ -6,6 +6,7 @@ from mjs_client.game.game import Game
 from mjs_client.game.gamephase import GamePhase
 from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation, AbstractCallOperation
+from .assistant import GameAssistantFrame
 
 from ...image import ROTATION_MATRICES, abs_anchor
 from ...language import tr
@@ -148,9 +149,16 @@ class GameScreen(AbstractScreen):
         self.button_confirm_round_result = tk.Button(self.frame_round_result, command=self.confirm_button_func)
         self.button_confirm_round_result.grid(row=2, column=2)
         self.round_results_displaying = False
-
         self.show_end_screen = False
 
+        self.frame_for_assistant = tk.Frame(self.frame)
+        self.frame_for_assistant.grid(row=0, column=1)
+        self.assistant = GameAssistantFrame(self.frame_for_assistant, self)
+
+        self.update_text()
+
+    def update_text(self):
+        self.assistant.update_text()
 
     def update(self):
         self.operation_button_group.update()
@@ -184,6 +192,7 @@ class GameScreen(AbstractScreen):
             self.canvas.delete(self.frame_round_result_id)
             self.round_results_displaying = False
             logging.info("Round result frame destroyed")
+        self.assistant.update()
 
     def get_round_result_text(self) -> str:
         lines = []

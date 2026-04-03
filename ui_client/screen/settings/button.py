@@ -17,7 +17,7 @@ class SettingsButton:
         self.screen.new_window(SettingScreen)
 
     def grid(self, row, column, **kwargs):
-        self.button.grid(row=row, column=column)
+        self.button.grid(row=row, column=column, **kwargs)
 
     def update_text(self):
         self.button.config(text=tr("button.settings"))

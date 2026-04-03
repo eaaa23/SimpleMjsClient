@@ -53,7 +53,7 @@ class AutoBot:
             try:
                 script_inst = script_class_wrapper.script_class()
             except Exception as e:
-                raise ScriptInstanceInitFail(e)
+                raise ScriptInstanceInitFail(script_class_wrapper, e)
 
             self.items.append(BotItem(script_inst, item_info.threshold))
 
