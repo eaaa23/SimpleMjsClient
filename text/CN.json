@@ -44,7 +44,11 @@
         "add": "添加机器人...",
         "config": "修改配置",
         "remove": "删除机器人",
-        "bot_name": "机器人名称"
+        "set_default": "设为自动运行",
+        "cancel_default": "取消自动运行",
+        "bot_name": "机器人名称",
+        "default": "游戏开始时自动运行",
+        "yes": "是"
       },
       "config": {
         "title": "机器人配置",

@@ -59,6 +59,7 @@ class Config:
     password: SensitiveStr = field(default_factory=SensitiveStr)
     preserve_login: bool = False
     autobots: list[AutoBotInfo] = field(default_factory=list)
+    default_autobot_name: str = ""
 
     def save(self, config_path: str = CONFIG_PATH):
         with open(config_path, 'w') as fp:

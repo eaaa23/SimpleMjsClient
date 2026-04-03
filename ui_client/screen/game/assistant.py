@@ -30,6 +30,10 @@ class GameAssistantFrame:
         self.update_bots_list()
 
         self.running_bot: AutoBot | None = None
+        for autobot_info in config.autobots:
+            if autobot_info.name == config.default_autobot_name:
+                self._set_running_bot_from_info(autobot_info)
+                break
 
         self.bot_run_or_stop_button = tk.Button(self.parent, command=self.run_or_stop_button_clicked)
         self.bot_run_or_stop_button.grid(row=2, column=0)
@@ -54,32 +58,34 @@ class GameAssistantFrame:
     def update_bots_list(self):
         self.bot_select_combobox.config(values=[autobot.name for autobot in config.autobots])
 
+    def _set_running_bot_from_info(self, autobot_info: AutoBotInfo):
+        try:
+            new_bot = AutoBot(self.ui.scripts_manager, autobot_info)
+        except ScriptNotFound as e:
+            item_info: AutoBotItemInfo = e.args[0]
+            messagebox.showerror(tr("game.assistant.dialog.title_error"),
+                                 tr("game.assistant.dialog.script_not_found").format(item_info.package_name,
+                                                                                     item_info.class_name))
+        except ScriptInstanceInitFail as e:
+            script_class_wrapper: ScriptClassWrapper
+            script_class_wrapper, exc = e.args
+            package_name = script_class_wrapper.package_wrapper.get_name()
+            script_name = script_class_wrapper.get_name()
+            messagebox.showerror(tr("game.assistant.dialog.title_error"),
+                                 tr("game.assistant.dialog.init_error").format(package_name, script_name) +
+                                 '\n{}: {}'.format(type(exc).__name__, str(exc)))
+        else:
+            self.running_bot = new_bot
+
     def run_or_stop_button_clicked(self):
         if self.running_bot is None:
             bot_name = self.bot_select_combobox.get()
 
             for autobot_info in config.autobots:
                 if autobot_info.name == bot_name:
+                    self._set_running_bot_from_info(autobot_info)
                     break
-            else:
-                return
 
-            try:
-                new_bot = AutoBot(self.ui.scripts_manager, autobot_info)
-            except ScriptNotFound as e:
-                item_info: AutoBotItemInfo = e.args[0]
-                messagebox.showerror(tr("game.assistant.dialog.title_error"),
-                                     tr("game.assistant.dialog.script_not_found").format(item_info.package_name, item_info.class_name))
-            except ScriptInstanceInitFail as e:
-                script_class_wrapper: ScriptClassWrapper
-                script_class_wrapper, exc = e.args
-                package_name = script_class_wrapper.package_wrapper.get_name()
-                script_name = script_class_wrapper.get_name()
-                messagebox.showerror(tr("game.assistant.dialog.title_error"),
-                                     tr("game.assistant.dialog.init_error").format(package_name, script_name) +
-                                     '\n{}: {}'.format(type(exc).__name__, str(exc)))
-            else:
-                self.running_bot = new_bot
         else:
             self.running_bot = None
         self.update_text()

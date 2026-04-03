@@ -72,6 +72,8 @@ class TreeviewList:
         return [(idx, row.item) for idx, row in enumerate(self.rows) if row.iid in set(self.treeview.selection())]
 
     def refresh_display(self, *indexes: int):
+        if not indexes:
+            indexes = range(len(self.rows))
         for idx in indexes:
             iid = self.rows[idx].iid
             item = self.rows[idx].item

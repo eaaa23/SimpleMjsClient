@@ -18,7 +18,8 @@ class BotDisplayScreen(AbstractScreen):
         super().__init__(parent, ui)
 
         self.bots_treeview_list = TreeviewList(self.frame,
-                                               columns=(TreeviewColumn("name", lambda autobot_info: autobot_info.name), ),
+                                               columns=(TreeviewColumn("name", lambda autobot_info: autobot_info.name),
+                                                        TreeviewColumn("default", lambda autobot_info: tr("settings.autobot.display.yes") if autobot_info.name == config.default_autobot_name else "")),
                                                selectmode=tk.BROWSE)
         self.bots_treeview_list.grid(row=0, column=0, sticky="w")
 
@@ -34,6 +35,12 @@ class BotDisplayScreen(AbstractScreen):
         self.bot_remove_button = tk.Button(self.button_frame, command=self.on_remove_button_click)
         self.bot_remove_button.grid(row=0, column=2)
 
+        self.set_default_button = tk.Button(self.button_frame, command=self.on_set_default_button_click)
+        self.set_default_button.grid(row=1, column=0)
+
+        self.cancel_default_button = tk.Button(self.button_frame, command=self.on_cancel_default_button_click)
+        self.cancel_default_button.grid(row=1, column=1)
+
         self.update_text()
         self.update()
 
@@ -41,10 +48,13 @@ class BotDisplayScreen(AbstractScreen):
         self.parent.title(tr("settings.autobot.display.title"))
 
         self.bots_treeview_list.heading("name", text=tr("settings.autobot.display.bot_name"))
+        self.bots_treeview_list.heading("default", text=tr("settings.autobot.display.default"))
 
         self.bot_add_button.config(text=tr("settings.autobot.display.add"))
         self.bot_config_button.config(text=tr("settings.autobot.display.config"))
         self.bot_remove_button.config(text=tr("settings.autobot.display.remove"))
+        self.set_default_button.config(text=tr("settings.autobot.display.set_default"))
+        self.cancel_default_button.config(text=tr("settings.autobot.display.cancel_default"))
 
     def update(self):
         self.bots_treeview_list.reset(config.autobots)
@@ -62,6 +72,22 @@ class BotDisplayScreen(AbstractScreen):
         if selected_indexes:
             del config.autobots[selected_indexes[0]]
             self.bots_treeview_list.remove_selected()
+
+    def on_set_default_button_click(self):
+        selected_items = self.bots_treeview_list.get_selected_items()
+        if selected_items:
+            config.default_autobot_name = selected_items[0].name
+            config.save()
+            self.bots_treeview_list.refresh_display()
+
+    def on_cancel_default_button_click(self):
+        selected_items = self.bots_treeview_list.get_selected_items()
+        if selected_items:
+            selected_item: AutoBotInfo = selected_items[0]
+            if selected_item.name == config.default_autobot_name:
+                config.default_autobot_name = ""
+                config.save()
+                self.bots_treeview_list.refresh_display()
 
 
 class BotConfigScreen(AbstractScreen):
