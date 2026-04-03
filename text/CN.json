@@ -284,6 +284,7 @@
       "bot_select": "选择机器人",
       "start": "启动",
       "stop": "停止",
+      "refresh": "刷新列表",
       "running": "正在运行：{}",
       "dialog": {
         "title_error": "错误",

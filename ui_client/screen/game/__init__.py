@@ -192,7 +192,6 @@ class GameScreen(AbstractScreen):
             self.canvas.delete(self.frame_round_result_id)
             self.round_results_displaying = False
             logging.info("Round result frame destroyed")
-        self.assistant.update()
 
     def get_round_result_text(self) -> str:
         lines = []

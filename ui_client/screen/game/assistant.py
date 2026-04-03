@@ -16,11 +16,18 @@ class GameAssistantFrame:
         self.ui = screen.ui
         self.screen = screen
 
-        self.bot_select_label = tk.Label(self.parent)
+        self.first_row = tk.Frame(self.parent)
+        self.first_row.grid(row=0, column=0)
+
+        self.bot_select_label = tk.Label(self.first_row)
         self.bot_select_label.grid(row=0, column=0)
 
-        self.bot_select_combobox = ttk.Combobox(self.parent, values=[autobot.name for autobot in config.autobots])
+        self.refresh_button = tk.Button(self.first_row, command=self.update_bots_list)
+        self.refresh_button.grid(row=0, column=1)
+
+        self.bot_select_combobox = ttk.Combobox(self.parent)
         self.bot_select_combobox.grid(row=1, column=0)
+        self.update_bots_list()
 
         self.running_bot: AutoBot | None = None
 
@@ -41,18 +48,24 @@ class GameAssistantFrame:
         else:
             self.bot_running_label.config(text=tr("game.assistant.running").format(self.running_bot.name))
             self.bot_run_or_stop_button.config(text=tr("game.assistant.stop"))
+        self.refresh_button.config(text=tr("game.assistant.refresh"))
         self.settings_button.update_text()
 
-    def update(self):
+    def update_bots_list(self):
         self.bot_select_combobox.config(values=[autobot.name for autobot in config.autobots])
 
     def run_or_stop_button_clicked(self):
         if self.running_bot is None:
-            cur = self.bot_select_combobox.current()
-            if cur == -1:
+            bot_name = self.bot_select_combobox.get()
+
+            for autobot_info in config.autobots:
+                if autobot_info.name == bot_name:
+                    break
+            else:
                 return
+
             try:
-                new_bot = AutoBot(self.ui.scripts_manager, config.autobots[cur])
+                new_bot = AutoBot(self.ui.scripts_manager, autobot_info)
             except ScriptNotFound as e:
                 item_info: AutoBotItemInfo = e.args[0]
                 messagebox.showerror(tr("game.assistant.dialog.title_error"),
