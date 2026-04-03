@@ -3,7 +3,7 @@ from tkinter import messagebox
 from functools import partial
 
 from .scripts import ScriptsTreeviewList
-from ....config import config, AutoBotInfo
+from ....config import config, AutoBotInfo, AutoBotItemInfo
 from ....language import tr, get_available_languages, get_language_from_name
 
 from ... import AbstractScreen
@@ -115,6 +115,19 @@ class BotConfigScreen(AbstractScreen):
         self.downgrade_item_button = tk.Button(self.button_frame, command=self.downgrade_item_button_clicked)
         self.downgrade_item_button.grid(row=0, column=2)
 
+        self.threshold_frame = tk.Frame(self.bot_frame)
+        self.threshold_frame.grid(row=3, column=1)
+
+        self.threshold_label = tk.Label(self.threshold_frame)
+        self.threshold_label.grid(row=0, column=0)
+
+        self.var_threshold = tk.StringVar()
+        self.threshold_entry = tk.Entry(self.threshold_frame, textvariable=self.var_threshold)
+        self.threshold_entry.grid(row=0, column=1)
+
+        self.threshold_set_button = tk.Button(self.threshold_frame, command=self.threshold_set_button_clicked)
+        self.threshold_set_button.grid(row=0, column=2)
+
         self.script_select_label = tk.Label(self.script_select_frame)
         self.script_select_label.grid(row=0, column=0)
 
@@ -150,10 +163,11 @@ class BotConfigScreen(AbstractScreen):
         self.uplift_item_button.config(text=tr("settings.autobot.config.uplift"))
         self.downgrade_item_button.config(text=tr("settings.autobot.config.downgrade"))
 
+        self.threshold_label.config(text=tr("settings.autobot.config.label.set_threshold"))
+        self.threshold_set_button.config(text=tr("settings.autobot.config.set_threshold"))
+
         self.script_select_label.config(text=tr("settings.autobot.config.label.select"))
-
         self.script_select_treeview_list.update_heading()
-
         self.script_add_button.config(text=tr("settings.autobot.config.add"))
 
         self.instruction_label.config(text=tr("settings.autobot.config.instruction"))
@@ -237,6 +251,21 @@ class BotConfigScreen(AbstractScreen):
     def downgrade_item_button_clicked(self):
         self._change_priority(1)
 
+    def threshold_set_button_clicked(self):
+        value_str = self.var_threshold.get()
+        try:
+            value_float = float(value_str)
+            if value_float > 1.0 or value_float < 0.0:
+                raise ValueError
+        except ValueError:
+            messagebox.showerror(tr("settings.autobot.config.dialog.title_error"), tr("settings.autobot.config.dialog.threshold_invalid"))
+            return
+        selected_enumeration = self.bot_items_treeview_list.get_selected_enumeration()
+        if not selected_enumeration:
+            return
+        selected_index, selected_item = selected_enumeration[0]
+        selected_item.threshold = value_float
+        self.bot_items_treeview_list.refresh_display(selected_index)
 
 
 class AutoBotSettingsFrame(SettingsSubframe):

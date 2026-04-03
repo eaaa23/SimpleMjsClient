@@ -48,10 +48,7 @@ class TreeviewList:
 
     def set(self, idx: int, item: Any):
         self.rows[idx].item = item
-        iid = self.rows[idx].iid
-        for column in self.columns:
-            self.treeview.set(iid, column.name, column.mapping_to_display(item))
-            self.treeview.item(iid, tags=self.tag_seeker(item))
+        self.refresh_display(idx)
 
     def swap(self, idx1: int, idx2: int):
         item1 = self.get(idx1)
@@ -70,6 +67,17 @@ class TreeviewList:
 
     def get_selected_indexes(self) -> list[int]:
         return [idx for idx, row in enumerate(self.rows) if row.iid in set(self.treeview.selection())]
+
+    def get_selected_enumeration(self) -> list[tuple[int, Any]]:
+        return [(idx, row.item) for idx, row in enumerate(self.rows) if row.iid in set(self.treeview.selection())]
+
+    def refresh_display(self, *indexes: int):
+        for idx in indexes:
+            iid = self.rows[idx].iid
+            item = self.rows[idx].item
+            for column in self.columns:
+                self.treeview.set(iid, column.name, column.mapping_to_display(item))
+                self.treeview.item(iid, tags=self.tag_seeker(item))
 
     def remove(self, idx: int):
         self.treeview.delete(self.rows[idx].iid)
