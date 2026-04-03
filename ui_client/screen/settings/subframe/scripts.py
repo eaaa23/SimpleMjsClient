@@ -65,7 +65,7 @@ class ScriptsFrame(SettingsSubframe):
         self.script_resync_button.config(text=tr("settings.scripts.button.resync"))
 
     def _add_package(self, package_wrapper):
-        for script_wrapper in package_wrapper.scripts:
+        for script_wrapper in package_wrapper.scripts.values():
             self.scripts_treeview_list.append(script_wrapper)
 
     def add_script(self, folder_path=None):
