@@ -1,11 +1,14 @@
-from typing import Generator, Iterable
+from typing import Generator, Iterable, Union, cast
 
 from ..const import OperationType
 
 from .gamestate import GameState
-from .operation import AbstractOperation, OPERATION_CLASS_DICT
+from .operation import AbstractOperation, OPERATION_CLASS_DICT, PlayTile, Chi, Pong, AnGang, MingGang, AddGang, Liqi, Tsumo, Ron, JiuZhongJiuPai, BaBei
 from .phases import OperationPhase
 
+# Only used in OperationContainer.__getitem__ to prevent static analyzer from giving warning
+# Do not use this to hint anywhere else!
+type AnyOperation = Union[PlayTile, Chi, Pong, AnGang, MingGang, AddGang, Liqi, Tsumo, Ron, JiuZhongJiuPai, BaBei]
 
 
 class OperationContainer:
@@ -13,8 +16,8 @@ class OperationContainer:
         self._operations: dict[OperationType, list[AbstractOperation]] = {}
         self.phase: OperationPhase = OperationPhase.NO_OPERATION
 
-    def __getitem__(self, item: OperationType) -> list[AbstractOperation]:
-        return self._operations.get(item, [])
+    def __getitem__(self, item: OperationType) -> list[AnyOperation]:
+        return cast(list[AnyOperation], self._operations.get(item, []))
 
     def __contains__(self, item: OperationType) -> bool:
         return item in self._operations

@@ -12,6 +12,13 @@ class AbstractOperation:
 
     @classmethod
     def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState) -> list:
+        """
+        Get all possible operations of this class with a specific ActionXXX protobuf data.
+
+        Protocol (rules):
+        1. Return value matches type list[Self], and it's never an empty list.
+        2. If the operation have the `cancel operation` option, it will appear at the last item of return value (retval[-1]).
+        """
         return [cls()]
 
     def __str__(self):
@@ -33,13 +40,18 @@ class AbstractPlayTile(AbstractOperation):
         return f"{self.__class__.__name__}(tile={self.tile}, is_moqie={self.is_moqie})"
 
 
-class AbstractCallOperation(AbstractOperation):
+class AbstractCancellableOperation(AbstractOperation):
+    def __init__(self, cancel_operation: bool = False):
+        self.cancel_operation = cancel_operation
+
+
+class AbstractCallOperation(AbstractCancellableOperation):
     is_self_operation: bool = False
     def __init__(self, tile: str, combination: list[str], index: int, cancel_operation=False):
+        super().__init__(cancel_operation)
         self.tile = tile
         self.combination = combination
         self._index = index
-        self.cancel_operation = cancel_operation
 
     async def perform(self, fasttest: FastTest):
         if self.is_self_operation:
@@ -60,8 +72,18 @@ class AbstractCallOperation(AbstractOperation):
 
 
 
-class Tsumo(AbstractOperation):
+class Tsumo(AbstractCancellableOperation):
     code = OperationType.TSUMO
+    """
+    @classmethod
+    def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState) -> list:
+        if game_state.player_liqis[game_state.my_seat]:
+            # After riichi, allowing user to give up tsumo and discard the tile out is important
+            return [cls(cancel_operation=False), cls(cancel_operation=True)]
+        else:
+            # However, without riichi, user can PlayTile, so there's no need.
+            return [cls(cancel_operation=False)]
+    """
 
 class JiuZhongJiuPai(AbstractOperation):
     code = OperationType.JIUZHONGJIUPAI
@@ -81,6 +103,9 @@ class PlayTile(AbstractPlayTile):
     code = OperationType.PLAY_TILE
     @classmethod
     def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
+        # When operation is PlayTile, operation.combination means tiles unable to play due to the "Kuikae" rule
+        # "Kuikae" rule: for example, chi 5s with 34s then play 2s is forbidden.
+        # In this case, 2s is in operation.combination, so it should not show up in return value.
         return [cls(hand_tile, index==len(game_state.my_hand)-1 and game_state.me_just_dealt_tile)
                 for index, hand_tile in enumerate(game_state.my_hand)
                 if hand_tile not in operation.combination]
@@ -89,6 +114,11 @@ class Liqi(AbstractPlayTile):
     code = OperationType.LIQI
     @classmethod
     def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
+        # When operation is Liqi, operation.combination contains `almost` all possible options that allows you to riichi
+        # However, see How weird operation.combination behaves:
+        # 1. your hand is 0567m23p23456799s, cut 0m or 5m riichi: operation.combination only have 5m
+        # 2. your hand is 0789m23p23456799s, cut 0m riichi: operation.combination only have 0m
+        # So it's important to transform all 0m into 5m before comparing
         return [cls(hand_tile, index==len(game_state.my_hand)-1 and game_state.me_just_dealt_tile)
                 for index, hand_tile in enumerate(game_state.my_hand)
                 if hand_tile in operation.combination or hand_tile.replace('0', '5') in turn0to5(operation.combination)]
