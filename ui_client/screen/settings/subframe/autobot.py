@@ -29,7 +29,7 @@ class BotConfigScreen(AbstractScreen):
         self.modified = False
 
         self.bot_frame = tk.Frame(self.frame)
-        self.bot_frame.grid(row=0, column=0)
+        self.bot_frame.grid(row=0, column=0, padx=10)
 
         self.script_select_frame = tk.Frame(self.frame)
         self.script_select_frame.grid(row=0, column=1)
@@ -79,7 +79,7 @@ class BotConfigScreen(AbstractScreen):
         self.threshold_set_button.grid(row=0, column=2)
 
         self.script_select_label = tk.Label(self.script_select_frame)
-        self.script_select_label.grid(row=0, column=0)
+        self.script_select_label.grid(row=0, column=0, sticky='n')
 
         self.script_select_treeview_list = ScriptsTreeviewList(self.script_select_frame, selectmode=tk.BROWSE)
         self.script_select_treeview_list.grid(row=1, column=0)
