@@ -5,8 +5,9 @@ from typing import Literal
 from mjs_client.const import OperationType
 from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation
+from mjs_client.game.operation_container import OperationContainer
 
-from .language import tr
+from ...language import tr
 
 
 class AbstractOperationButton:
@@ -125,6 +126,7 @@ class OperationButtonGroup:
         self.col_flip = 1 if anchor in (tk.NW, tk.SW) else -1
         self.button_size = button_size
         self.game_state: GameState = game_screen.game_state
+        self.possible_operations: OperationContainer = game_screen.possible_operations
         self._buttons: dict[int, AbstractOperationButton] = {cls.code: cls(self, []) for cls in OPERATION_BUTTON_CLASSES}
         self._cancel_button = CancelButton(self, [None])
         self.active_buttons: list[AbstractOperationButton] = []
@@ -133,8 +135,8 @@ class OperationButtonGroup:
     def update(self):
         self.clear_buttons()
         cancel_button_op = None
-        logging.info(f"OperationButtonGroup update: {self.game_state.possible_operations}")
-        for code, operations in self.game_state.possible_operations.items():
+        logging.info(f"OperationButtonGroup update: {self.possible_operations}")
+        for code, operations in self.possible_operations.items():
             if code in self._buttons:
                 if hasattr(operations[-1], "cancel_operation") and operations[-1].cancel_operation:
                     cancel_button_op = operations[-1]

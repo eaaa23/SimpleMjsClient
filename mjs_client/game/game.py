@@ -3,15 +3,16 @@ from urllib.parse import urljoin
 
 from google.protobuf.message import DecodeError
 
-from .action import GameActionHandler
-from .operation import AbstractOperation
 from ..api.base import MSRPCChannel
 from ..api.rpc import FastTest
 from ..api import protocol_pb2 as pb
+from ..rule import DetailRule
+
 from . import action
 from .action_prototype_decode import decode
-from ..rule import DetailRule
-from .gamephase import GamePhase
+from .action_handler import GameActionHandler
+from .operation import AbstractOperation
+from .phases import GamePhase
 
 
 class Game:
@@ -50,7 +51,7 @@ class Game:
             else:
                 self.player_names.append("")
 
-        self.action_handler = action.GameActionHandler(self, self.player_count, self.is_east, self.my_seat)
+        self.action_handler = GameActionHandler(self, self.player_count, self.is_east, self.my_seat)
         self.channel.add_hook(".lq.ActionPrototype", self._hook_action_prototype)
         self.channel.add_hook(".lq.NotifyGameEndResult", self._hook_game_end)
         await self.fasttest.enter_game(pb.ReqCommon())

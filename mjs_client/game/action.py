@@ -1,22 +1,10 @@
-import asyncio
-from enum import IntEnum
-from sortedcontainers import SortedList
-
-from .gamephase import GamePhase
-from .tiles_util import tile_cmp_key, turn0to5
 from ..api import protocol_pb2 as pb
-from .gamestate import GameState, Discard, Open, OpenType, OpenDirection, RoundResult, WinInfo, EndResult
-from .operation import OperationType, OPERATION_CLASS_DICT, AbstractOperation
 from ..const import AnGangAddGangType, CPGType
 from ..exceptions import GameError
 
-
-class OperationPhase(IntEnum):
-    DEFAULT = -1
-    SELF_TURN = 0
-    OTHER_PLAYED = 1
-    AFTER_SELF_CPG = 2
-    AFTER_OTHER_ZIMING = 3
+from .phases import OperationPhase
+from .tiles_util import tile_cmp_key
+from .gamestate import GameState, Discard, Open, OpenType, RoundResult, WinInfo
 
 
 class AbstractGameAction:
@@ -29,8 +17,8 @@ class AbstractGameAction:
     def __lt__(self, other):
         return self.step < other.step
 
-    def update(self, game_state: GameState) -> int:
-        return OperationPhase.DEFAULT
+    def update(self, game_state: GameState) -> OperationPhase:
+        return OperationPhase.NO_OPERATION
 
 class GameActionWithLiqiSuccess(AbstractGameAction):
     def update_liqi(self, game_state: GameState):
@@ -48,7 +36,7 @@ class ActionMJStart(AbstractGameAction):
 class ActionNewRound(AbstractGameAction):
     data_class = pb.ActionNewRound
     operation_delay = 3.0
-    def update(self, game_state: GameState) -> int:
+    def update(self, game_state: GameState) -> OperationPhase:
         game_state.current_chang, game_state.current_ju, game_state.current_benchang = self.data.chang, self.data.ju, self.data.ben
         game_state.my_hand = sorted(self.data.tiles, key=tile_cmp_key)
         game_state.doras = list(self.data.doras)
@@ -60,12 +48,12 @@ class ActionNewRound(AbstractGameAction):
         for seat in range(game_state.player_count):
             game_state.player_hand_size[seat] = (14 if seat == game_state.current_ju else 13)
         game_state.reset_player_info()
-        return OperationPhase.SELF_TURN if game_state.me_just_dealt_tile else OperationPhase.DEFAULT
+        return OperationPhase.SELF_TURN if game_state.me_just_dealt_tile else OperationPhase.NO_OPERATION
 
 
 class ActionDealTile(GameActionWithLiqiSuccess):
     data_class = pb.ActionDealTile
-    def update(self, game_state: GameState) -> int:
+    def update(self, game_state: GameState) -> OperationPhase:
         self.update_liqi(game_state)
         game_state.player_hand_size[self.data.seat] += 1
         game_state.last_operation_is_deal = True
@@ -73,7 +61,7 @@ class ActionDealTile(GameActionWithLiqiSuccess):
         is_deal_after_angang = bool(self.data.doras)
         if not is_my_deal and not is_deal_after_angang:
             game_state.left_tile_count -= 1
-            return OperationPhase.DEFAULT
+            return OperationPhase.NO_OPERATION
         game_state.left_tile_count = self.data.left_tile_count
         if is_my_deal:
             game_state.my_hand.append(self.data.tile)
@@ -85,7 +73,7 @@ class ActionDealTile(GameActionWithLiqiSuccess):
 
 class ActionDiscardTile(AbstractGameAction):
     data_class = pb.ActionDiscardTile
-    def update(self, game_state: GameState) -> int:
+    def update(self, game_state: GameState) -> OperationPhase:
         game_state.last_discard = Discard(tile=self.data.tile, moqie=self.data.moqie,
                                                                   called=False, is_liqi=(self.data.is_liqi or self.data.is_wliqi))
         game_state.player_discards[self.data.seat].append(game_state.last_discard)
@@ -105,7 +93,7 @@ class ActionDiscardTile(AbstractGameAction):
 
 class ActionChiPengGang(GameActionWithLiqiSuccess):
     data_class = pb.ActionChiPengGang
-    def update(self, game_state: GameState) -> int:
+    def update(self, game_state: GameState) -> OperationPhase:
         for i, from_ in enumerate(self.data.froms):
             if from_ != self.data.seat:
                 direction = (from_ - self.data.seat) % 4
@@ -127,7 +115,7 @@ class ActionChiPengGang(GameActionWithLiqiSuccess):
 
 class ActionAnGangAddGang(AbstractGameAction):
     data_class = pb.ActionAnGangAddGang
-    def update(self, game_state: GameState) -> int:
+    def update(self, game_state: GameState) -> OperationPhase:
         if self.data.type == AnGangAddGangType.ANGANG:
             if self.data.tiles[0] in ('0', '5'):
                 tile_0 = '0' + self.data.tiles[1]
@@ -158,7 +146,7 @@ class ActionAnGangAddGang(AbstractGameAction):
 
 class ActionBaBei(AbstractGameAction):
     data_class = pb.ActionBaBei
-    def update(self, game_state: GameState) -> int:
+    def update(self, game_state: GameState) -> OperationPhase:
         game_state.player_peis[self.data.seat].append(self.data.moqie)
         game_state.player_hand_size[self.data.seat] -= 1
         if game_state.me_just_dealt_tile:
@@ -212,65 +200,3 @@ NAME_DICT = {"ActionNewRound": ActionNewRound, "ActionMJStart": ActionMJStart, "
              "ActionDiscardTile": ActionDiscardTile, "ActionChiPengGang": ActionChiPengGang,
              "ActionAnGangAddGang": ActionAnGangAddGang, "ActionBaBei": ActionBaBei, "ActionHule": ActionHule,
              "ActionLiuJu": ActionLiuJu, "ActionNoTile": ActionNoTile}
-
-
-class GameActionHandler:
-    def __init__(self, game, player_count: int, is_east: bool, my_seat: int):
-        self.game = game
-        self.action_queue = SortedList()
-        self.game_state = GameState(player_count, is_east, my_seat)
-        self.next_step = 0
-        self.lock = asyncio.Event()
-        self.lock.set()
-
-    def add_action(self, action: AbstractGameAction):
-        self.action_queue.add(action)
-
-    def clear_actions(self):
-        self.action_queue.clear()
-        self.next_step = 0
-
-    async def update(self):
-        await self.lock.wait()
-        for i in range(len(self.action_queue)):
-            this_action: AbstractGameAction = self.action_queue[0]
-            if self.next_step > this_action.step:
-                raise ValueError(f"GameActionQueue Failure: GameActionHandler ptr at {self.next_step}, received action step={this_action.step}")
-            elif self.next_step == this_action.step:
-                if isinstance(this_action, RoundEnder):
-                    self.game_state.round_result = this_action.result(self.game_state)
-                    self.game_state.phase = GamePhase.BETWEEN_ROUNDS
-                    self.clear_actions()
-                    self.game_state.possible_operations = {}
-                    self.game.client.update_event.set()
-                    return
-                self.game_state.last_operation_is_deal = False
-                self.game_state.phase = GamePhase.IN_PROGRESS
-                operation_phase = this_action.update(self.game_state)
-                self.game_state.possible_operations = self.get_possible_operations(this_action.data)
-                self.action_queue.pop(0)
-                self.next_step += 1
-                self.game.client.update_event.set()
-                #logging.info(f"ActionHandler updated step from {this_action.step} to {self.next_step}")
-            else:
-                #logging.info(f"ActionHandler blocking, now ptr at {self.next_step}, this_action at {this_action.step}")
-                break
-        #logging.info(f"Debug-gamestate: my_hand={self.game_state.my_hand}")
-
-    def get_possible_operations(self, data) -> dict[int, list[AbstractOperation]]:
-        retval = {}
-        if hasattr(data, "operation"):
-            for op in data.operation.operation_list:
-                possible_operations_of_type = OPERATION_CLASS_DICT[op.type].get_possible_operations(data, op, self.game_state)
-                if possible_operations_of_type:
-                    retval[op.type] = possible_operations_of_type
-        return retval
-
-    def end_game(self, result_protobuf):
-        self.clear_actions()
-        self.game_state.game_result = [EndResult(seat=player_item.seat,
-                                                 point=player_item.part_point_1,
-                                                 score=player_item.total_point / 1000,
-                                                 pt=player_item.grading_score)
-                                       for player_item in result_protobuf.players]
-        self.game_state.ended = True

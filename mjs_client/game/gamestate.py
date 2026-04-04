@@ -1,7 +1,7 @@
 from enum import IntEnum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from .gamephase import GamePhase
+from .phases import GamePhase
 from .tiles_util import tile_cmp_key, TILES_TO_INDEX34, SANMA_INVALID_TILES
 
 
@@ -32,14 +32,12 @@ class Open:
     direction: int = OpenDirection.NONE
     tile_from_other: str = ""
 
-
 @dataclass
 class Discard:
     tile: str
     moqie: bool
     called: bool
     is_liqi: bool
-
 
 @dataclass
 class EndResult:
@@ -48,39 +46,54 @@ class EndResult:
     score: float = 0.0
     pt: int = 0
 
+class RoundResultType(IntEnum):
+    HULE = 0
+    LIUJU = 1
+
+@dataclass
+class WinInfo:
+    seat: int
+    yakus: dict[int, int]
+    fan: int
+    fu: int
+    score: int
+    tsumo: bool
+    yakuman: bool = False
+
+@dataclass
+class RoundResult:
+    shown_hands: dict[int, tuple[list[str], list[Open]]] = field(default_factory=dict)
+    delta_scores: list[int] = field(default_factory=lambda: [0 for i in range(4)])
+    win: list[WinInfo] = field(default_factory=list)
 
 
+@dataclass
 class GameState:
-    def __init__(self, player_count: int, is_east: bool, my_seat: int):
-        self.player_count = player_count
-        self.is_east = is_east
-        self.my_seat: int = my_seat
-        self.current_chang: int = 0
-        self.current_ju: int = 0
-        self.current_benchang: int = 0
-        #self.whose_turn = 0
-        self.doras: list[str] = []
-        self.scores: list[int] = [0]*4
-        self.liqibang: int = 0
-        self.left_tile_count: int = 0
-        self.my_hand: list[str] = []
-        self.me_just_dealt_tile: bool = False
-        self.last_operation_is_deal: bool = False
-        self.last_discard: Discard = None
-        self.phase: int = GamePhase.EMPTY
-        self.player_hand_size: list[int] = [0 for i in range(4)]
-        self.player_discards: list[list[Discard]] = [[] for i in range(4)]
-        self.player_opens: list[list[Open]] = [[] for i in range(4)]
-        self.player_peis: list[list[bool]] = [[] for i in range(4)]
-        self.player_liqis: list[int] = [0]*4
-        self.round_result: RoundResult = RoundResult({}, [], [])
+    player_count: int
+    is_east: bool
+    my_seat: int
+    current_chang: int = 0
+    current_ju: int = 0
+    current_benchang: int = 0
+    doras: list[str] = field(default_factory=list)
+    scores: list[int] = field(default_factory=lambda: [0 for i in range(4)])
+    liqibang: int = 0
+    left_tile_count: int = 0
+    my_hand: list[str] = field(default_factory=list)
+    me_just_dealt_tile: bool = False
+    last_operation_is_deal: bool = False
+    last_discard: Discard | None = None
+    phase: GamePhase = GamePhase.EMPTY
+    player_hand_size: list[int] = field(default_factory=lambda: [0 for i in range(4)])
+    player_discards: list[list[Discard]] = field(default_factory=lambda: [[] for i in range(4)])
+    player_opens: list[list[Open]] = field(default_factory=lambda: [[] for i in range(4)])
+    player_peis: list[list[bool]] = field(default_factory=lambda: [[] for i in range(4)])
+    player_liqis: list[int] = field(default_factory=lambda: [0 for i in range(4)])
+    round_result: RoundResult = field(default_factory=RoundResult)
 
-        self.ended: bool = False
-        # The only list index by rank, not by seat.
-        self.game_result: list[EndResult] = []
-
-        self.possible_operations: dict[int, list] = {}
-        self._all_visible_tiles34: list[int] = [0]*34
+    ended: bool = False
+    # The only list index by rank, not by seat.
+    game_result: list[EndResult] = field(default_factory=list)
 
     def reset_player_info(self):
         self.player_discards: list[list[Discard]] = [[] for i in range(4)]
@@ -101,27 +114,3 @@ class GameState:
             retval += "\n"
         return retval
         """
-
-class RoundResultType(IntEnum):
-    HULE = 0
-    LIUJU = 1
-
-
-@dataclass
-class WinInfo:
-    seat: int
-    yakus: dict[int, int]
-    fan: int
-    fu: int
-    score: int
-    tsumo: bool
-    yakuman: bool = False
-
-
-
-@dataclass
-class RoundResult:
-    shown_hands: dict[int, tuple[list[str], list[Open]]]
-    delta_scores: list[int]
-    win: list[WinInfo]
-

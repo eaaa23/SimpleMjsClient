@@ -11,10 +11,14 @@ from mjs_client.exceptions import MjsError
 from .config import Config, get_config, config
 from .screen import AbstractScreen, LoginScreen, MAIN_SCREENS, BlankScreen
 from .language import set_language, tr, TEXT_FOLDER
+from .scripts import PackageScriptManager
 
 class UI:
     def __init__(self):
         self.apply_config()
+
+        self.scripts_manager = PackageScriptManager()
+        self.scripts_manager.sync_scripts_folder()
 
         self.root = tk.Tk()
         self.root.title(tr("title"))

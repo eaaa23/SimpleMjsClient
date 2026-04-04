@@ -4,9 +4,6 @@ from typing import List, Iterable, Dict, Callable, Tuple
 def tile_cmp_key(tile: str) -> int:
     return {'m': 0, 'p': 10, 's': 20, 'z': 30}[tile[1]] + (5 if tile[0] == '0' else int(tile[0]))
 
-def is_yaochu(tile: str) -> bool:
-    return tile.endswith("z") or tile.startswith("1") or tile.startswith("9")
-
 def turn0to5(tiles: Iterable[str]) -> List[str]:
     return [tile.replace('0', '5') for tile in tiles]
 

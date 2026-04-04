@@ -8,6 +8,81 @@
   },
   "settings": {
     "language": "语言: ",
+    "scripts": {
+      "label": "脚本：",
+      "heading": {
+        "script": "脚本名称",
+        "source": "来源（脚本包）"
+      },
+      "button": {
+        "add": "添加...",
+        "remove": "删除脚本包",
+        "resync": "重新加载"
+      },
+      "dialog": {
+        "title_warning": "警告",
+        "title_info": "提示",
+        "load": {
+          "title_error": "加载出错",
+          "1": "该脚本包名称与Python库发生重名，无法导入",
+          "2": "未找到该脚本包",
+          "3": "脚本包不为Python包，无法导入",
+          "4": "包规范创建失败",
+          "5": "脚本包加载出错。请确认您的系统版本可以加载该脚本包",
+          "6": "脚本包元信息缺失，无法导入",
+          "7": "源文件已不存在或被移除",
+          "8": "当前环境已有同名包，是否替换？"
+        },
+        "remove": "以下{}个脚本包会被删除：",
+        "remove_default": "内置脚本包不能被删除"
+      }
+    },
+    "autobot": {
+      "label": "机器人：",
+      "display": {
+        "title": "机器人列表",
+        "add": "添加机器人...",
+        "config": "修改配置",
+        "remove": "删除机器人",
+        "set_default": "设为自动运行",
+        "cancel_default": "取消自动运行",
+        "bot_name": "机器人名称",
+        "default": "游戏开始时自动运行",
+        "yes": "是"
+      },
+      "config": {
+        "title": "机器人配置",
+        "label": {
+          "name": "名称：",
+          "scripts": "脚本列表：",
+          "select": "选择脚本",
+          "set_threshold": "设置阈值："
+        },
+        "heading": {
+          "package": "脚本来源（包名）",
+          "class": "脚本名称",
+          "threshold": "阈值"
+        },
+        "add": "加入脚本列表",
+        "remove": "移出脚本列表",
+        "uplift": "提升优先级",
+        "downgrade": "降低优先级",
+        "set_threshold": "设置",
+        "dialog": {
+          "title_error": "错误",
+          "empty_name": "名称不能为空",
+          "name_conflict": "名称重复，请改名",
+          "no_items": "至少需要包含一个脚本",
+          "title_warning": "警告",
+          "save": "是否保存？",
+          "threshold_invalid": "阈值必须为0～1之间的数字"
+        },
+        "save": "保存并退出",
+        "instruction": "脚本项目的作用是在每一次需要作出打牌选择时，给予每一个选项一个意愿值（范围0-1）\n脚本列表里的脚本项目优先级从高到低排列\n每一次打牌需要作出选择时，会从高到低优先级询问所有脚本项目\n脚本项目阈值越低，越容易直接决定这一打的选择；阈值越高，越容易将选择权交给优先级更低的脚本项目"
+      },
+
+      "entry": "设置..."
+    },
     "apply": "应用"
   },
   "login": {
@@ -208,7 +283,19 @@
       "liqi": "立直",
       "cancel": "跳过"
     },
-    "result": "{}位：{} {}点  {:+.1f}  {}pt"
+    "result": "{}位：{} {}点  {:+.1f}  {}pt",
+    "assistant": {
+      "bot_select": "选择机器人",
+      "start": "启动",
+      "stop": "停止",
+      "refresh": "刷新列表",
+      "running": "正在运行：{}",
+      "dialog": {
+        "title_error": "错误",
+        "script_not_found": "该机器人含有本地不存在的脚本{}.{}",
+        "init_error": "{}包中的脚本{}初始化出错"
+      }
+    }
   },
   "error": {
     "error_code": "错误码：{}",
