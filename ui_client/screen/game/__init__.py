@@ -2,9 +2,9 @@ import logging
 import tkinter as tk
 
 from mjs_client.client import ClientPhase
-from mjs_client.game.action import OperationPhase
 from mjs_client.game.game import Game
-from mjs_client.game.gamephase import GamePhase
+from mjs_client.game.operation_container import OperationContainer
+from mjs_client.game.phases import GamePhase, OperationPhase
 from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation, AbstractCallOperation
 from .assistant import GameAssistantFrame
@@ -81,6 +81,7 @@ class GameScreen(AbstractScreen):
 
         self.game: Game = self.client.game
         self.game_state: GameState = self.client.game.action_handler.game_state
+        self.possible_operations: OperationContainer = self.client.game.action_handler.possible_operations
 
         self.canvas = tk.Canvas(self.frame, width=self.CANVAS_WIDTH, height=self.CANVAS_HEIGHT)
         self.canvas.grid(row=0, column=0)
@@ -102,7 +103,7 @@ class GameScreen(AbstractScreen):
             rot_matrix = ROTATION_MATRICES[rotation]
             # hand
             rel_x, rel_y = rot_matrix(-312, 332)
-            self.hand_tile_groups.append(HandTileGroup(self.canvas, self.game_state, self.operation_button_group,
+            self.hand_tile_groups.append(HandTileGroup(self.canvas, self.game_state, self.operation_button_group, self.possible_operations,
                                                        (self.CANVAS_MID_X+rel_x, self.CANVAS_MID_Y+rel_y),
                                                        rotation, 0.5, self.tile_bind_func))
 
@@ -166,10 +167,10 @@ class GameScreen(AbstractScreen):
             self.operation_button_group.update()
             self.call_selection_subframe.clear()
         else:
-            operation_phase = self.game_state.operation_phase
+            operation_phase = self.possible_operations.phase
             logging.info(f"{operation_phase=}")
             if operation_phase != OperationPhase.NO_OPERATION:
-                decision = self.assistant.running_bot.decision(self.game_state.possible_operations, self.game_state, self.game_state.operation_phase)
+                decision = self.assistant.running_bot.decision(self.possible_operations, self.game_state)
                 logging.info(f"AutoBot Decision: {decision}")
                 if decision is not None:
                     self.controller.game_put_operation(decision)

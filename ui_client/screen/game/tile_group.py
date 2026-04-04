@@ -7,7 +7,8 @@ from typing import Callable, Any
 from PIL import ImageTk
 
 from mjs_client.const import OperationType
-from mjs_client.game.gamephase import GamePhase
+from mjs_client.game.operation_container import OperationContainer
+from mjs_client.game.phases import GamePhase
 from mjs_client.game.gamestate import GameState, Open, OpenType, Discard
 from mjs_client.game.operation import AbstractOperation, PlayTile, Liqi, AbstractCallOperation
 
@@ -83,10 +84,12 @@ class HandTileGroup(AbstractTileGroup):
     Includes open tiles.
     """
     def __init__(self, canvas: tk.Canvas, game_state: GameState, operation_button_group: OperationButtonGroup,
+                 possible_operations: OperationContainer,
                  origin: tuple[int, int], rotation: int = 0, scale: float = 1,
                  bind_function: Callable[[AbstractOperation, tk.Event], Any] = None):
         super().__init__(canvas, game_state, origin, rotation, scale, bind_function)
         self.operation_button_group = operation_button_group
+        self.possible_operations = possible_operations
 
         self.hand_tiles: list[str] = []
         self.opens: list[Open] = []
@@ -148,7 +151,7 @@ class HandTileGroup(AbstractTileGroup):
         if self.rotation != 0:
             return TileInfo(tile=tile)
         if self.liqi_pressed:
-            if tile in (op.tile for op in self.game_state.possible_operations.get(OperationType.LIQI, [])):
+            if tile in (op.tile for op in self.possible_operations[OperationType.LIQI]):
                 alpha = 1.0
             else:
                 alpha = 0.3

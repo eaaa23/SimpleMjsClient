@@ -2,8 +2,7 @@ import logging
 from enum import IntEnum
 from dataclasses import dataclass
 
-from mjs_client.const import OperationType
-from mjs_client.game.action import OperationPhase
+from mjs_client.game.operation_container import OperationContainer
 from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation
 
@@ -24,10 +23,9 @@ class BotItem:
     mode: BotItemMode = BotItemMode.DETERMINE
     faulty: bool = False
 
-    def decision(self, operations: dict[OperationType, list[AbstractOperation]], game_state: GameState, operation_phase: int)\
-        -> list[Evaluation]:
+    def decision(self, operations: OperationContainer, game_state: GameState) -> list[Evaluation]:
         try:
-            script_evaluation = self.script_inst.decision(operations, game_state, operation_phase)
+            script_evaluation = self.script_inst.decision(operations, game_state)
             if not isinstance(script_evaluation, (list, tuple)):
                 raise TypeError("not list or tuple")
             if not all(isinstance(ev, Evaluation) for ev in script_evaluation):
@@ -66,38 +64,18 @@ class AutoBot:
 
             self.items.append(BotItem(script_inst, item_info.threshold))
 
-    """
-    def add_item(self, item: BotItem):
-        self.items.append(item)
-
-    def remove_item(self, idx: int):
-        del self.items[idx]
-
-    def set_threshold(self, idx: int, threshold: float):
-        self.items[idx].threshold = threshold
-
-    def _swap_item(self, idx_1: int, idx_2: int):
-        self.items[idx_1], self.items[idx_2] = self.items[idx_2], self.items[idx_1]
-
-    def uplift_item(self, idx: int):
-        self._swap_item(idx-1, idx)
-
-    def downgrade_item(self, idx: int):
-        self._swap_item(idx, idx+1)
-    """
-    def decision(self, operations: dict[OperationType, list[AbstractOperation]], game_state: GameState, operation_phase: OperationPhase,
-                 ) -> AbstractOperation | None:
+    def decision(self, operations: OperationContainer, game_state: GameState) -> AbstractOperation | None:
         if not self.items:
             return None
 
-        operations_flattened: dict[int, AbstractOperation] = {id(op): op for op_list in operations.values() for op in op_list}
+        operations_flattened: dict[int, AbstractOperation] = {id(op): op for op in operations.flattened()}
 
         initial_candidates_evaluation_list: dict[int, float] = {}
         candidates_id: set[int] = set()
         found_initial_candidates: bool = False
 
         for bot_item in self.items:
-            evaluations_list: list[Evaluation] = bot_item.decision(operations, game_state, operation_phase)
+            evaluations_list: list[Evaluation] = bot_item.decision(operations, game_state)
 
             evaluations_id = set(id(evaluation.operation) for evaluation in evaluations_list)
 

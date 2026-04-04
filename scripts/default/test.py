@@ -3,6 +3,7 @@ import logging
 from mjs_client.const import OperationType
 from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation, AbstractPlayTile, PlayTile
+from mjs_client.game.operation_container import OperationContainer
 from script_api import AbstractScript, Evaluation
 
 
@@ -11,11 +12,11 @@ def is_yaochu(tile: str) -> bool:
 
 
 class KokushiScript(AbstractScript):
-    def self_turn(self, operations: dict[int, list], game_state: GameState) -> list[Evaluation]:
+    def self_turn(self, operations: OperationContainer, game_state: GameState) -> list[Evaluation]:
         if OperationType.TSUMO in operations:
             return [Evaluation(operations[OperationType.TSUMO][0], 1.0)]
 
-        playtiles: list[PlayTile] = operations.get(OperationType.PLAY_TILE, [])
+        playtiles: list[PlayTile] = operations[OperationType.PLAY_TILE]
         non_yaochus: list[PlayTile] = list(filter(lambda op: not is_yaochu(op.tile), playtiles))
         if non_yaochus:
             return [Evaluation(op, 1.0) for op in non_yaochus]
@@ -27,13 +28,13 @@ class KokushiScript(AbstractScript):
             logging.error(f"TestScript: What the heck? All yaochu tiles without a pair")
             return []
 
-    def other_call_in_turn(self, operations: dict[int, list[AbstractOperation]], game_state: GameState):
+    def other_call_in_turn(self, operations: OperationContainer, game_state: GameState):
         return []
 
-    def after_self_called(self, operations: dict[int, list[AbstractOperation]], game_state: GameState):
+    def after_self_called(self, operations: OperationContainer, game_state: GameState):
         return []
 
-    def other_played(self, operations: dict[int, list[AbstractOperation]], game_state: GameState):
+    def other_played(self, operations: OperationContainer, game_state: GameState):
         return []
 
     NAME: str = "Kokushi (13 Orphans) Beta"
