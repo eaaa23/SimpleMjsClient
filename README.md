@@ -47,6 +47,24 @@ Make sure you installed all [dependencies](#Dependency) before moving onto the f
 ### MacOS
 
 - Install `py2app` with `pip install py2app`
+- Find the location of python package `google.protobuf`. 
+You can run `pip show google` to see its location.  
+The folder should be like this:  
+    ```
+    google/
+    └── protobuf/  
+        ├── __init__.py  
+        ├── ...
+    ```
+    Add a `__init__.py` file in the `google` folder:
+    ```
+    google/
+    ├── __init__.py  
+    └── protobuf/  
+        ├── __init__.py  
+        ├── ...
+    ```
+
 - Make sure your environment has no `pyinstaller` installed. 
 Or just run `pip uninstall pyinstaller` then reinstall later.
 - Clear `build`, `dist` and `.eggs` directories if exists.

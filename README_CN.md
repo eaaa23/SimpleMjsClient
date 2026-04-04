@@ -42,6 +42,23 @@
 ### MacOS
 
 - 安装 `py2app`:  `pip install py2app`
+- 找到 `google.protobuf`包的安装路径。可以使用`pip show google`来查看。   
+打开安装路径，文件夹结构应如下所示:  
+    ```
+    google/
+    └── protobuf/  
+        ├── __init__.py  
+        ├── ...
+    ```
+    在`google`文件夹下添加一个`__init__.py`：
+    ```
+    google/
+    ├── __init__.py  
+    └── protobuf/  
+        ├── __init__.py  
+        ├── ...
+    ```
+
 - 确保你的环境下没有`pyinstaller`.
 可以先运行 `pip uninstall pyinstaller` 后续再重新安装`pyinstaller`.
 - 清空 `build`, `dist` 和 `.eggs` 文件夹下的内容，如果它们存在。
