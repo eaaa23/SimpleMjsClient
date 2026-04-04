@@ -152,3 +152,6 @@ class Ron(AbstractCallOperation):
 
 _OPERATION_CLASS_LIST = [PlayTile, Chi, Pong, AnGang, MingGang, AddGang, Liqi, Tsumo, Ron, JiuZhongJiuPai, BaBei]
 OPERATION_CLASS_DICT = {_op.code: _op for _op in _OPERATION_CLASS_LIST}
+
+_CANCELLABLE_CLASS_LIST = [Chi, Pong, MingGang]    # TODO: Add Tsumo, AnGang (They should be cancellable after riichi)
+CANCELLABLE_CLASS_DICT = {_op.code: _op for _op in _CANCELLABLE_CLASS_LIST}

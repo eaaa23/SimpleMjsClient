@@ -167,13 +167,21 @@ class GameScreen(AbstractScreen):
             self.operation_button_group.update()
             self.call_selection_subframe.clear()
         else:
-            operation_phase = self.possible_operations.phase
-            logging.info(f"{operation_phase=}")
-            if operation_phase != OperationPhase.NO_OPERATION:
-                decision = self.assistant.running_bot.decision(self.possible_operations, self.game_state)
-                logging.info(f"AutoBot Decision: {decision}")
-                if decision is not None:
-                    self.controller.game_put_operation(decision)
+            if self.possible_operations:
+                operation_phase = self.possible_operations.phase
+                logging.info(f"{operation_phase=}")
+                if operation_phase != OperationPhase.NO_OPERATION:
+                    decision = self.assistant.running_bot.decision(self.possible_operations, self.game_state)
+                    logging.info(f"AutoBot Decision: {decision}")
+
+                    if decision is None:
+                        # Another try: default
+                        decision = self.possible_operations.get_default()
+
+                    # decision might still be None... whatever. Ignore the case when decision is None
+                    if decision is not None:
+                        logging.info(f"Final Decision: {decision}")
+                        self.controller.game_put_operation(decision)
 
         for rotation in range(4):
             self.hand_tile_groups[rotation].redraw()
