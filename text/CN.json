@@ -38,7 +38,7 @@
       }
     },
     "autobot": {
-      "label": "机器人",
+      "label": "机器人：",
       "display": {
         "title": "机器人列表",
         "add": "添加机器人...",

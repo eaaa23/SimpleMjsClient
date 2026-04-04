@@ -13,83 +13,6 @@ from .. import SettingsSubframe
 from ....scripts import ScriptClassWrapper, PackageScriptManager
 
 
-class BotDisplayScreen(AbstractScreen):
-    def __init__(self, parent, ui):
-        super().__init__(parent, ui)
-
-        self.bots_treeview_list = TreeviewList(self.frame,
-                                               columns=(TreeviewColumn("name", lambda autobot_info: autobot_info.name),
-                                                        TreeviewColumn("default", lambda autobot_info: tr("settings.autobot.display.yes") if autobot_info.name == config.default_autobot_name else "")),
-                                               selectmode=tk.BROWSE)
-        self.bots_treeview_list.grid(row=0, column=0, sticky="w")
-
-        self.button_frame = tk.Frame(self.frame)
-        self.button_frame.grid(row=1, column=0)
-
-        self.bot_add_button = tk.Button(self.button_frame, command=self.on_add_button_click)
-        self.bot_add_button.grid(row=0, column=0)
-
-        self.bot_config_button = tk.Button(self.button_frame, command=self.on_config_button_click)
-        self.bot_config_button.grid(row=0, column=1)
-
-        self.bot_remove_button = tk.Button(self.button_frame, command=self.on_remove_button_click)
-        self.bot_remove_button.grid(row=0, column=2)
-
-        self.set_default_button = tk.Button(self.button_frame, command=self.on_set_default_button_click)
-        self.set_default_button.grid(row=1, column=0)
-
-        self.cancel_default_button = tk.Button(self.button_frame, command=self.on_cancel_default_button_click)
-        self.cancel_default_button.grid(row=1, column=1)
-
-        self.update_text()
-        self.update()
-
-    def update_text(self):
-        self.parent.title(tr("settings.autobot.display.title"))
-
-        self.bots_treeview_list.heading("name", text=tr("settings.autobot.display.bot_name"))
-        self.bots_treeview_list.heading("default", text=tr("settings.autobot.display.default"))
-
-        self.bot_add_button.config(text=tr("settings.autobot.display.add"))
-        self.bot_config_button.config(text=tr("settings.autobot.display.config"))
-        self.bot_remove_button.config(text=tr("settings.autobot.display.remove"))
-        self.set_default_button.config(text=tr("settings.autobot.display.set_default"))
-        self.cancel_default_button.config(text=tr("settings.autobot.display.cancel_default"))
-
-    def update(self):
-        self.bots_treeview_list.reset(config.autobots)
-
-    def on_add_button_click(self):
-        self.new_window(BotConfigScreen, autobot_info=None)
-
-    def on_config_button_click(self):
-        selected_items = self.bots_treeview_list.get_selected_items()
-        if selected_items:
-            self.new_window(BotConfigScreen, autobot_info=selected_items[0])
-
-    def on_remove_button_click(self):
-        selected_indexes = self.bots_treeview_list.get_selected_indexes()
-        if selected_indexes:
-            del config.autobots[selected_indexes[0]]
-            self.bots_treeview_list.remove_selected()
-
-    def on_set_default_button_click(self):
-        selected_items = self.bots_treeview_list.get_selected_items()
-        if selected_items:
-            config.default_autobot_name = selected_items[0].name
-            config.save()
-            self.bots_treeview_list.refresh_display()
-
-    def on_cancel_default_button_click(self):
-        selected_items = self.bots_treeview_list.get_selected_items()
-        if selected_items:
-            selected_item: AutoBotInfo = selected_items[0]
-            if selected_item.name == config.default_autobot_name:
-                config.default_autobot_name = ""
-                config.save()
-                self.bots_treeview_list.refresh_display()
-
-
 class BotConfigScreen(AbstractScreen):
     def __init__(self, parent, ui, autobot_info: AutoBotInfo | None):
         super().__init__(parent, ui)
@@ -301,12 +224,81 @@ class AutoBotSettingsFrame(SettingsSubframe):
         self.auto_bot_config_label = tk.Label(self.parent)
         self.auto_bot_config_label.grid(row=0, column=0)
 
-        self.open_display_screen_button = tk.Button(self.parent, command=partial(self.screen.new_window, BotDisplayScreen))
-        self.open_display_screen_button.grid(row=0, column=1)
+        self.bot_display_frame = tk.Frame(self.parent)
+        self.bot_display_frame.grid(row=0, column=1)
 
-    def apply(self):
-        pass
+        self.bots_treeview_list = TreeviewList(self.bot_display_frame,
+                                               columns=(TreeviewColumn("name", lambda autobot_info: autobot_info.name),
+                                                        TreeviewColumn("default", lambda autobot_info: tr(
+                                                            "settings.autobot.display.yes") if autobot_info.name == config.default_autobot_name else "")),
+                                               selectmode=tk.BROWSE)
+        self.bots_treeview_list.grid(row=0, column=0, sticky="w")
+
+        self.button_frame = tk.Frame(self.bot_display_frame)
+        self.button_frame.grid(row=1, column=0)
+
+        self.bot_add_button = tk.Button(self.button_frame, command=self.on_add_button_click)
+        self.bot_add_button.grid(row=0, column=0)
+
+        self.bot_config_button = tk.Button(self.button_frame, command=self.on_config_button_click)
+        self.bot_config_button.grid(row=0, column=1)
+
+        self.bot_remove_button = tk.Button(self.button_frame, command=self.on_remove_button_click)
+        self.bot_remove_button.grid(row=0, column=2)
+
+        self.set_default_button = tk.Button(self.button_frame, command=self.on_set_default_button_click)
+        self.set_default_button.grid(row=1, column=0)
+
+        self.cancel_default_button = tk.Button(self.button_frame, command=self.on_cancel_default_button_click)
+        self.cancel_default_button.grid(row=1, column=1)
+
+        self.update_text()
+        self.update()
 
     def update_text(self):
         self.auto_bot_config_label.config(text=tr("settings.autobot.label"))
-        self.open_display_screen_button.config(text=tr("settings.autobot.entry"))
+
+        self.bots_treeview_list.heading("name", text=tr("settings.autobot.display.bot_name"))
+        self.bots_treeview_list.heading("default", text=tr("settings.autobot.display.default"))
+
+        self.bot_add_button.config(text=tr("settings.autobot.display.add"))
+        self.bot_config_button.config(text=tr("settings.autobot.display.config"))
+        self.bot_remove_button.config(text=tr("settings.autobot.display.remove"))
+        self.set_default_button.config(text=tr("settings.autobot.display.set_default"))
+        self.cancel_default_button.config(text=tr("settings.autobot.display.cancel_default"))
+
+    def update(self):
+        self.bots_treeview_list.reset(config.autobots)
+
+    def on_add_button_click(self):
+        self.screen.new_window(BotConfigScreen, autobot_info=None)
+
+    def on_config_button_click(self):
+        selected_items = self.bots_treeview_list.get_selected_items()
+        if selected_items:
+            self.screen.new_window(BotConfigScreen, autobot_info=selected_items[0])
+
+    def on_remove_button_click(self):
+        selected_indexes = self.bots_treeview_list.get_selected_indexes()
+        if selected_indexes:
+            del config.autobots[selected_indexes[0]]
+            self.bots_treeview_list.remove_selected()
+
+    def on_set_default_button_click(self):
+        selected_items = self.bots_treeview_list.get_selected_items()
+        if selected_items:
+            config.default_autobot_name = selected_items[0].name
+            config.save()
+            self.bots_treeview_list.refresh_display()
+
+    def on_cancel_default_button_click(self):
+        selected_items = self.bots_treeview_list.get_selected_items()
+        if selected_items:
+            selected_item: AutoBotInfo = selected_items[0]
+            if selected_item.name == config.default_autobot_name:
+                config.default_autobot_name = ""
+                config.save()
+                self.bots_treeview_list.refresh_display()
+
+    def apply(self):
+        pass
