@@ -1,5 +1,4 @@
-from .test import KokushiScript
-from .test2 import TestScript2
+from .kokushi import KokushiScript
 
 
 NAME = "Default"
