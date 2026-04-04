@@ -8,7 +8,81 @@
   },
   "settings": {
     "language": "Language: ",
-    "apply": "Apply"
+    "apply": "Apply",
+    "scripts": {
+      "label": "Scripts: ",
+      "heading": {
+        "script": "Name",
+        "source": "Source (Package name)"
+      },
+      "button": {
+        "add": "Add...",
+        "remove": "Remove",
+        "resync": "Resync"
+      },
+      "dialog": {
+        "title_warning": "Warning",
+        "title_info": "Info",
+        "load": {
+          "title_error": "Error on Loading",
+          "1": "Script package name conflicts with Python library",
+          "2": "Script package not found",
+          "3": "Script package is not a python package",
+          "4": "Failed to create package specification",
+          "5": "Failed to import package. Please check your system version and the package's requirements",
+          "6": "Package meta incomplete",
+          "7": "Source file inexists",
+          "8": "There is already a package with the same name in the current environment. Do you want to replace it?"
+        },
+        "remove": "{} packages will be removed: ",
+        "remove_default": "Default script package cannot be removed"
+      }
+    },
+    "autobot": {
+      "label": "Bots: ",
+      "display": {
+        "title": "Bot List",
+        "add": "Add...",
+        "config": "Config",
+        "remove": "Remove",
+        "set_default": "Set Auto-run",
+        "cancel_default": "Cancel Auto-run",
+        "bot_name": "Name",
+        "default": "Auto-run at start of game",
+        "yes": "Yes"
+      },
+      "config": {
+        "title": "Bot Config",
+        "label": {
+          "name": "Name: ",
+          "scripts": "Scripts: ",
+          "select": "Select script",
+          "set_threshold": "Set threshold"
+        },
+        "heading": {
+          "package": "Source (Package name)",
+          "class": "Script name",
+          "threshold": "Threshold"
+        },
+        "add": "Add to scripts",
+        "remove": "Remove",
+        "uplift": "Uplift priority",
+        "downgrade": "Downgrade priority",
+        "set_threshold": "Set",
+        "dialog": {
+          "title_error": "Error",
+          "empty_name": "Bot name can't be empty",
+          "name_conflict": "Duplicated bot name",
+          "no_items": "At least 1 script is required",
+          "title_warning": "Warning",
+          "save": "Save?",
+          "threshold_invalid": "Threshold should be numeric above 0 below 1"
+        },
+        "save": "Save and Quit",
+        "instruction": "Whenever a decision needs to be made in the game, each script item assigns willingness value (ranging from 0 to 1) to each option of the decision.\nThe script items in the script list are arranged in order of priority from high to low.\nEvery time a choice needs to be made during the game, all script items will be asked in descending order of priority.\nThe lower the threshold, the easier it is to directly determine the choice.\nThe higher the threshold, the more likely it is to hand over the choice to the script items with lower priority."
+      },
+      "entry": "Settings..."
+    }
   },
   "login": {
     "username": "Account: ",
@@ -208,7 +282,19 @@
       "liqi": "Riichi",
       "cancel": "Skip"
     },
-    "result": "{} place: {} {} Points  {:+.1f}  {}pt"
+    "result": "{} place: {} {} Points  {:+.1f}  {}pt",
+    "assistant": {
+      "bot_select": "Select Bot",
+      "start": "Start",
+      "stop": "Stop",
+      "refresh": "Refresh",
+      "running": "Running: {}",
+      "dialog": {
+        "title_error": "Error",
+        "script_not_found": "This bot contains inexistent script {}.{}",
+        "init_error": "Script {1} in package {0} failed to initialize"
+      }
+    }
   },
   "error": {
     "error_code": "Error Code: {}",
