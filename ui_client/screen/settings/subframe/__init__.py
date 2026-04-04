@@ -10,5 +10,8 @@ class SettingsSubframe:
     def apply(self):
         pass
 
+    def update(self):
+        pass
+
     def update_text(self):
         pass

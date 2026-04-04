@@ -1,3 +1,4 @@
+import logging
 import tkinter as tk
 from tkinter import messagebox
 from functools import partial
@@ -145,7 +146,7 @@ class BotConfigScreen(AbstractScreen):
         self.autobot_info.items = bot_items
         if self.is_new_bot:
             config.autobots.append(self.autobot_info)
-            self.is_new_bot = False
+            self.is_new_bot = False   # not necessary now but maybe in the future
         config.save()
         return True
 
@@ -161,7 +162,8 @@ class BotConfigScreen(AbstractScreen):
             # Not modified, res should be False, but it's better to set it to True
             # Prevent corner case when the list is changed but self.modified == False
             # In this case it's better to save than not save.
-            res = True
+            # However, it's better to let user quit if this is a new bot
+            res = not self.is_new_bot
 
         if res is True:
             return self.save()

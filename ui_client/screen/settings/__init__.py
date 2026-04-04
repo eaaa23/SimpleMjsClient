@@ -32,6 +32,10 @@ class SettingScreen(AbstractScreen):
             subframe.apply()
         self.ui.save_config()
 
+    def update(self):
+        for subframe in self.subframes:
+            subframe.update()
+
     def update_text(self):
         self.parent.title(tr("button.settings"))
         for subframe in self.subframes:
