@@ -4,6 +4,11 @@
 
 > A simple client of Mahjong Soul made with python.
 
+## Choose your language for README:
+
+- [English](README.md)
+- [简体中文](README_CN.md)
+
 
 ## Dependency
 
@@ -36,6 +41,8 @@ Submodule `mjs_client/api` is a modified version of https://github.com/MahjongRe
 with hook field supported.
 
 ## Pack Executable / App
+
+Make sure you installed all [dependencies](#Dependency) before moving onto the followings.
 
 ### MacOS
 
