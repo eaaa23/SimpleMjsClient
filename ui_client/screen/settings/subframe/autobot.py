@@ -75,6 +75,8 @@ class BotConfigScreen(AbstractScreen):
         self.threshold_entry = tk.Entry(self.threshold_frame, textvariable=self.var_threshold)
         self.threshold_entry.grid(row=0, column=1)
         self.threshold_entry.bind("<Return>", lambda e: self.threshold_set_button_clicked())
+        self.threshold_entry.bind("<Up>", lambda e: self._move_selected(-1))
+        self.threshold_entry.bind("<Down>", lambda e: self._move_selected(1))
 
         self.threshold_set_button = tk.Button(self.threshold_frame, command=self.threshold_set_button_clicked)
         self.threshold_set_button.grid(row=0, column=2)
@@ -179,11 +181,18 @@ class BotConfigScreen(AbstractScreen):
             return
         selected_class_wrapper: ScriptClassWrapper = selected_items[0]
         self.bot_items_treeview_list.append(selected_class_wrapper.to_item_info())
+        self.bot_items_treeview_list.selection_set(self.bot_items_treeview_list.length()-1)
         self.modified = True
 
     def remove_item_button_clicked(self):
         self.bot_items_treeview_list.remove_selected()
         self.modified = True
+
+    def _move_selected(self, offset: int):
+        if selected_indexes := self.bot_items_treeview_list.get_selected_indexes():
+            target_idx = selected_indexes[0] + offset
+            if 0 <= target_idx < self.bot_items_treeview_list.length():
+                self.bot_items_treeview_list.selection_set(target_idx)
 
     def _change_priority(self, offset: int):
         selected_indexes = self.bot_items_treeview_list.get_selected_indexes()
