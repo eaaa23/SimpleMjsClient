@@ -17,6 +17,9 @@ class Seat:
     ready: bool
     is_robot: bool = False
 
+    def __post_init__(self):
+        self.ready = self.ready or self.is_robot
+
 
 class Room:
     def __init__(self, client, *, player_count: int = 0, is_east: bool = None, detail_rule: DetailRule = None,
