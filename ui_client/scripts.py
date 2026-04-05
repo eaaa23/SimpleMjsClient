@@ -37,7 +37,7 @@ class ScriptClassWrapper:
     def __call__(self, **kwargs) -> AbstractScript | None:
         try:
             return self.script_class(**kwargs)
-        except:
+        except Exception:
             return None
 
     def to_item_info(self, threshold: float = 0.0) -> AutoBotItemInfo:
@@ -131,7 +131,7 @@ class PackageScriptManager:
 
         try:
             spec.loader.exec_module(package)
-        except:
+        except Exception:
             sys.modules.pop(package_name)
             return LoadPackageRetval(LoadPackageCode.PACKAGE_LOAD_FAIL)
 
