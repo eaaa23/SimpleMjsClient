@@ -74,6 +74,7 @@ class BotConfigScreen(AbstractScreen):
         self.var_threshold = tk.StringVar()
         self.threshold_entry = tk.Entry(self.threshold_frame, textvariable=self.var_threshold)
         self.threshold_entry.grid(row=0, column=1)
+        self.threshold_entry.bind("<Return>", lambda e: self.threshold_set_button_clicked())
 
         self.threshold_set_button = tk.Button(self.threshold_frame, command=self.threshold_set_button_clicked)
         self.threshold_set_button.grid(row=0, column=2)
@@ -217,6 +218,7 @@ class BotConfigScreen(AbstractScreen):
         selected_index, selected_item = selected_enumeration[0]
         selected_item.threshold = value_float
         self.bot_items_treeview_list.refresh_display(selected_index)
+        self.modified = True
 
 
 class AutoBotSettingsFrame(SettingsSubframe):

@@ -16,6 +16,7 @@ class JoinRoomScreen(AbstractScreen):
         self.var_room_id = tk.StringVar()
         self.room_number_entry = tk.Entry(self.frame, textvariable=self.var_room_id)
         self.room_number_entry.grid(row=0, column=1)
+        self.room_number_entry.bind("<Return>", lambda e: self.join())
 
         self.button_join = tk.Button(self.frame, command=self.join)
         self.button_join.grid(row=1, column=1)
