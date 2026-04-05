@@ -6,7 +6,7 @@ from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation
 from mjs_client.game.operation_container import OperationContainer
 
-from .config import AutoBotInfo, AutoBotItemInfo
+from .config import AutoBotInfo
 from .scripts import PackageScriptManager
 
 from script_api import AbstractScript, Evaluation

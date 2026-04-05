@@ -175,17 +175,15 @@ class BotConfigScreen(AbstractScreen):
             return self.save()
         elif res is False:
             return True
-        else: # res is None
+        else:  # res is None
             return False
 
     def script_add_button_clicked(self):
-        selected_items = self.script_select_treeview_list.get_selected_items()
-        if not selected_items:
-            return
-        selected_class_wrapper: ScriptClassWrapper = selected_items[0]
-        self.bot_items_treeview_list.append(selected_class_wrapper.to_item_info())
-        self.bot_items_treeview_list.selection_set(self.bot_items_treeview_list.length()-1)
-        self.modified = True
+        if selected_items := self.script_select_treeview_list.get_selected_items():
+            selected_class_wrapper: ScriptClassWrapper = selected_items[0]
+            self.bot_items_treeview_list.append(selected_class_wrapper.to_item_info())
+            self.bot_items_treeview_list.selection_set(self.bot_items_treeview_list.length()-1)
+            self.modified = True
 
     def remove_item_button_clicked(self):
         self.bot_items_treeview_list.remove_selected()
@@ -198,16 +196,14 @@ class BotConfigScreen(AbstractScreen):
                 self.bot_items_treeview_list.selection_set(target_idx)
 
     def _change_priority(self, offset: int):
-        selected_indexes = self.bot_items_treeview_list.get_selected_indexes()
-        if not selected_indexes:
-            return
-        selected_idx = selected_indexes[0]
-        swap_idx = selected_idx + offset
-        if swap_idx < 0 or swap_idx >= self.bot_items_treeview_list.length():
-            return
-        self.bot_items_treeview_list.swap(selected_idx, swap_idx)
-        self.bot_items_treeview_list.selection_set(swap_idx)
-        self.modified = True
+        if selected_indexes := self.bot_items_treeview_list.get_selected_indexes():
+            selected_idx = selected_indexes[0]
+            swap_idx = selected_idx + offset
+            if swap_idx < 0 or swap_idx >= self.bot_items_treeview_list.length():
+                return
+            self.bot_items_treeview_list.swap(selected_idx, swap_idx)
+            self.bot_items_treeview_list.selection_set(swap_idx)
+            self.modified = True
 
     def uplift_item_button_clicked(self):
         self._change_priority(-1)
@@ -294,8 +290,7 @@ class AutoBotSettingsFrame(SettingsSubframe):
         self.screen.new_window(BotConfigScreen, autobot_info=None)
 
     def on_config_button_click(self):
-        selected_items = self.bots_treeview_list.get_selected_items()
-        if selected_items:
+        if selected_items := self.bots_treeview_list.get_selected_items():
             self.screen.new_window(BotConfigScreen, autobot_info=selected_items[0])
 
     def on_remove_button_click(self):
@@ -305,15 +300,13 @@ class AutoBotSettingsFrame(SettingsSubframe):
             self.bots_treeview_list.remove_selected()
 
     def on_set_default_button_click(self):
-        selected_items = self.bots_treeview_list.get_selected_items()
-        if selected_items:
+        if selected_items := self.bots_treeview_list.get_selected_items():
             config.default_autobot_name = selected_items[0].name
             config.save()
             self.bots_treeview_list.refresh_display()
 
     def on_cancel_default_button_click(self):
-        selected_items = self.bots_treeview_list.get_selected_items()
-        if selected_items:
+        if selected_items := self.bots_treeview_list.get_selected_items():
             selected_item: AutoBotInfo = selected_items[0]
             if selected_item.name == config.default_autobot_name:
                 config.default_autobot_name = ""
