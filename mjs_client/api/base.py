@@ -1,11 +1,14 @@
 import asyncio
 import logging
 import ssl
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, cast
 
+from google.protobuf.message import Message
 import websockets
+from websockets import Origin
+from websockets.asyncio.connection import Connection
 
-from .protocol_pb2 import Wrapper
+from . import protocol_pb2 as pb
 
 EXTRA_HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                                'Chrome/71.0.3578.98 Safari/537.36'}
@@ -15,16 +18,19 @@ ONCE_HOOK = -1
 
 class MSRPCChannel:
     def __init__(self, endpoint: str):
-        self._endpoint = endpoint
-        self._req_events = {}
-        self._new_req_idx = 1
-        self._res = {}
-        self._hook_fields: dict[int, dict[str, list[Callable[[Any], Coroutine]]]] \
-            = {0: {}, ONCE_HOOK: {}}
-        self._is_active = False
+        self._endpoint: str = endpoint
 
-        self._ws = None
-        self._msg_dispatcher = None
+        # _req_events key: req_idx
+        self._req_events: dict[int, asyncio.Event] = {}
+        self._new_req_idx: int = 1
+        self._res = {}
+
+        # hook fields type: dict[field_id: int, dict[msg_type: str, callback]]
+        self._hook_fields: dict[int, dict[str, list[Callable[[Any], Coroutine]]]] = {0: {}, ONCE_HOOK: {}}
+        self._is_active: bool = False
+
+        self._ws: Connection | None = None
+        self._msg_dispatcher: asyncio.Task | None = None
 
     def add_hook(self, msg_type: str, hook: Callable[[Any], Coroutine], field_id: int = 0):
         field = self._hook_fields[field_id]
@@ -39,30 +45,30 @@ class MSRPCChannel:
         if field_id in self._hook_fields:
             self._hook_fields.pop(field_id)
 
-    def unwrap(self, wrapped):
-        wrapper = Wrapper()
+    def unwrap(self, wrapped: bytes) -> pb.Wrapper:
+        wrapper = pb.Wrapper()
         wrapper.ParseFromString(wrapped)
         return wrapper
 
-    def wrap(self, name, data):
-        wrapper = Wrapper()
-        wrapper.name = name
-        wrapper.data = data
+    def wrap(self, name: str, data: bytes) -> bytes:
+        wrapper = pb.Wrapper(name=name, data=data)
         return wrapper.SerializeToString()
 
-    async def connect(self, ms_host, do_ssl=False):
+    async def connect(self, ms_host: str, do_ssl: bool = False):
         self._is_active = True
-        if do_ssl:
-            self._ws = await websockets.connect(self._endpoint, origin=ms_host, additional_headers=EXTRA_HEADERS)
-        else:
+
+        additional_kwargs = {}
+        if not do_ssl:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
-            self._ws = await websockets.connect(self._endpoint, origin=ms_host, ssl=ssl_context,
-                                                additional_headers=EXTRA_HEADERS)
+            additional_kwargs["ssl"] = ssl_context
+
+        self._ws = await websockets.connect(self._endpoint, origin=cast(Origin, ms_host),
+                                            additional_headers=EXTRA_HEADERS, **additional_kwargs)
         self._msg_dispatcher = asyncio.create_task(self.dispatch_msg())
 
-    def is_active(self):
+    def is_active(self) -> bool:
         return self._is_active
 
     async def close(self):
@@ -92,14 +98,14 @@ class MSRPCChannel:
                 self._res[idx] = msg
                 self._req_events[idx].set()
 
-    def _trigger_hooks(self, wrapper):
+    def _trigger_hooks(self, wrapper: pb.Wrapper):
         for field_id, field in self._hook_fields.items():
             for hook in field.get(wrapper.name, []):
                 asyncio.create_task(hook(wrapper.data))
             if field_id == ONCE_HOOK:
                 field[wrapper.name] = []
 
-    async def send_request(self, name, msg):
+    async def send_request(self, name: str, msg: bytes):
         idx = self._new_req_idx
         self._new_req_idx = (self._new_req_idx + 1) % 60007
 
@@ -126,8 +132,7 @@ class MSRPCChannel:
 
 
 class MSRPCService:
-
-    def __init__(self, channel):
+    def __init__(self, channel: MSRPCChannel):
         self._channel = channel
 
     def get_package_name(self):
@@ -136,13 +141,13 @@ class MSRPCService:
     def get_service_name(self):
         raise NotImplementedError
 
-    def get_req_class(self, method):
+    def get_req_class(self, method: str):
         raise NotImplementedError
 
-    def get_res_class(self, method):
+    def get_res_class(self, method: str):
         raise NotImplementedError
 
-    async def call_method(self, method, req):
+    async def call_method(self, method: str, req: Message) -> Message:
         msg = req.SerializeToString()
         name = '.{}.{}.{}'.format(self.get_package_name(), self.get_service_name(), method)
         res_msg = await self._channel.send_request(name, msg)
