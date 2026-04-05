@@ -72,8 +72,8 @@ Or just run `pip uninstall pyinstaller` then reinstall later.
 - Output App will be placed in the `dist` folder.
 
 #### Custom Icon
-- You can replace `icon/src.png` and regenerate the `icon.icns`
-in the `icon` folder using `makeicon.sh`.
+- Replace `icon/src.png` with your custom icon picture (png). Keep it named `src.png`
+- Run: `cd icon && ./makeicon.sh`
 
 #### View Log Files
 - Log files are stored inside app path: `Contents/Resources/log`. 

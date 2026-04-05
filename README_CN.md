@@ -66,7 +66,8 @@
 - 输出的App在 `dist` 文件夹下。
 
 #### 自定义App图标
-- 你可以在 `icon` 目录下更换`src.png`并使用`makeicon.sh`重新生成图标.
+- 将 `icon/src.png` 替换为你想要使用的App图标图片(png格式)
+- 运行 `cd icon && ./makeicon.sh`
 
 #### 查看App Log
 - 日志文件被存储在App内部的目录: `Contents/Resources/log`. 
