@@ -1,5 +1,5 @@
-import tkinter as tk
 from collections.abc import Callable
+import tkinter as tk
 from typing import Any
 
 from mjs_client.client import ClientPhase, MahjongSoulClient
@@ -8,6 +8,7 @@ from mjs_client.controller import ClientController
 
 class AbstractScreen:
     PHASE: int = ClientPhase.BLANK
+
     def __init__(self, parent, ui):
         self.ui = ui
         self.client: MahjongSoulClient = ui.client

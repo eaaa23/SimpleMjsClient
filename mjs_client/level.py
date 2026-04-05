@@ -28,13 +28,12 @@ class Level:
         return self.level in LevelMain
 
     def get_match_levels(self) -> list[Self]:
-        return [l for l in (self, self.lower()) if l.level in MATCH_SID]
+        return [lv for lv in (self, self.lower()) if lv.level in MATCH_SID]
 
     def get_max_score(self) -> int:
         if self.level == LevelMain.CELESTIAL:
             return CELESTIAL_MAX_SCORE
         return LEVEL_MAX_SCORE[self.level][self.sublevel - 1]
-
 
 
 def get_match_level_dict(player_count_to_level: dict[int, Level]) -> dict[int, set[int]]:

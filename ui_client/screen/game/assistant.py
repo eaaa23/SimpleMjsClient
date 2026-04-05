@@ -2,12 +2,12 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from .. import AbstractScreen
+from ..settings.button import SettingsButton
+
 from ...autobot import AutoBot, ScriptNotFound, ScriptInstanceInitFail
 from ...config import config, AutoBotInfo, AutoBotItemInfo
 from ...language import tr
 from ...scripts import ScriptClassWrapper
-
-from ..settings.button import SettingsButton
 
 
 class GameAssistantFrame:

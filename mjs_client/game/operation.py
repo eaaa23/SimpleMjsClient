@@ -1,12 +1,14 @@
 from ..api import protocol_pb2 as pb
 from ..api.rpc import FastTest
+from ..const import OperationType
+
 from .gamestate import GameState
 from .tiles_util import turn0to5
-from ..const import OperationType
 
 
 class AbstractOperation:
     code: OperationType = -1
+
     async def perform(self, fasttest: FastTest):
         await fasttest.input_operation(pb.ReqSelfOperation(type=self.code))
 
@@ -27,14 +29,14 @@ class AbstractOperation:
     def __repr__(self):
         return self.__str__()
 
+
 class AbstractPlayTile(AbstractOperation):
     def __init__(self, tile: str, is_moqie: bool):
         self.tile = tile
         self.is_moqie = is_moqie
 
     async def perform(self, fasttest: FastTest):
-        await fasttest.input_operation(pb.ReqSelfOperation(type=self.code, tile=self.tile,
-                                              moqie=self.is_moqie))
+        await fasttest.input_operation(pb.ReqSelfOperation(type=self.code, tile=self.tile, moqie=self.is_moqie))
 
     def __str__(self):
         return f"{self.__class__.__name__}(tile={self.tile}, is_moqie={self.is_moqie})"
@@ -47,6 +49,7 @@ class AbstractCancellableOperation(AbstractOperation):
 
 class AbstractCallOperation(AbstractCancellableOperation):
     is_self_operation: bool = False
+
     def __init__(self, tile: str, combination: list[str], index: int, cancel_operation=False):
         super().__init__(cancel_operation)
         self.tile = tile
@@ -57,7 +60,8 @@ class AbstractCallOperation(AbstractCancellableOperation):
         if self.is_self_operation:
             await fasttest.input_operation(pb.ReqSelfOperation(type=self.code, index=self._index))
         else:
-            await fasttest.input_chi_peng_gang(pb.ReqChiPengGang(type=self.code, index=self._index, cancel_operation=self.cancel_operation))
+            await fasttest.input_chi_peng_gang(pb.ReqChiPengGang(type=self.code, index=self._index,
+                                                                 cancel_operation=self.cancel_operation))
 
     @classmethod
     def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
@@ -68,8 +72,8 @@ class AbstractCallOperation(AbstractCancellableOperation):
         return retval
 
     def __str__(self):
-        return f"{self.__class__.__name__}(tile={self.tile}, combination={self.combination}, cancel_op={self.cancel_operation})"
-
+        return (f"{type(self).__name__}"
+                f"(tile={self.tile}, combination={self.combination}, cancel_op={self.cancel_operation})")
 
 
 class Tsumo(AbstractCancellableOperation):
@@ -85,11 +89,14 @@ class Tsumo(AbstractCancellableOperation):
             return [cls(cancel_operation=False)]
     """
 
+
 class JiuZhongJiuPai(AbstractOperation):
     code = OperationType.JIUZHONGJIUPAI
 
+
 class BaBei(AbstractPlayTile):
     code = OperationType.BABEI
+
     @classmethod
     def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
         retval = []
@@ -99,19 +106,23 @@ class BaBei(AbstractPlayTile):
             retval.append(cls("", False))
         return retval
 
+
 class PlayTile(AbstractPlayTile):
     code = OperationType.PLAY_TILE
+
     @classmethod
     def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
         # When operation is PlayTile, operation.combination means tiles unable to play due to the "Kuikae" rule
         # "Kuikae" rule: for example, chi 5s with 34s then play 2s is forbidden.
         # In this case, 2s is in operation.combination, so it should not show up in return value.
-        return [cls(hand_tile, index==len(game_state.my_hand)-1 and game_state.me_just_dealt_tile)
+        return [cls(hand_tile, index == len(game_state.my_hand)-1 and game_state.me_just_dealt_tile)
                 for index, hand_tile in enumerate(game_state.my_hand)
                 if hand_tile not in operation.combination]
 
+
 class Liqi(AbstractPlayTile):
     code = OperationType.LIQI
+
     @classmethod
     def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
         # When operation is Liqi, operation.combination contains `almost` all possible options that allows you to riichi
@@ -119,31 +130,36 @@ class Liqi(AbstractPlayTile):
         # 1. your hand is 0567m23p23456799s, cut 0m or 5m riichi: operation.combination only have 5m
         # 2. your hand is 0789m23p23456799s, cut 0m riichi: operation.combination only have 0m
         # So it's important to transform all 0m into 5m before comparing
-        return [cls(hand_tile, index==len(game_state.my_hand)-1 and game_state.me_just_dealt_tile)
+        return [cls(hand_tile, index == len(game_state.my_hand)-1 and game_state.me_just_dealt_tile)
                 for index, hand_tile in enumerate(game_state.my_hand)
                 if hand_tile in operation.combination or hand_tile.replace('0', '5') in turn0to5(operation.combination)]
-
 
 
 class Chi(AbstractCallOperation):
     code = OperationType.CHI
 
+
 class Pong(AbstractCallOperation):
     code = OperationType.PONG
 
+
 class MingGang(AbstractCallOperation):
     code = OperationType.MINGGANG
+
 
 class AnGang(AbstractCallOperation):
     code = OperationType.ANGANG
     is_self_operation = True
 
+
 class AddGang(AbstractCallOperation):
     code = OperationType.ADDGANG
     is_self_operation = True
 
+
 class Ron(AbstractCallOperation):
     code = OperationType.RON
+
     @classmethod
     def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
         retval = [cls("", [], 0), cls("", [], 0, cancel_operation=True)]

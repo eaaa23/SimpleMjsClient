@@ -5,13 +5,14 @@ from ...language import tr
 from ..abstract import AbstractScreen
 
 from .subframe import SettingsSubframe
-from .subframe.language_select import LanguageSelectFrame
-from .subframe.scripts import ScriptsFrame
 from .subframe.autobot import AutoBotSettingsFrame
+from .subframe.scripts import ScriptsFrame
+from .subframe.language_select import LanguageSelectFrame
 
 
 class SettingScreen(AbstractScreen):
     SUBFRAME_CLASSES = [LanguageSelectFrame, ScriptsFrame, AutoBotSettingsFrame]
+
     def __init__(self, parent, ui):
         super().__init__(parent, ui)
 

@@ -1,20 +1,19 @@
 import asyncio
+import logging
 import ssl
 from typing import Any, Callable, Coroutine
-import logging
 
 import websockets
+
 from .protocol_pb2 import Wrapper
 
 EXTRA_HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                         'Chrome/71.0.3578.98 Safari/537.36'}
+                               'Chrome/71.0.3578.98 Safari/537.36'}
 
 ONCE_HOOK = -1
 
 
-
 class MSRPCChannel:
-
     def __init__(self, endpoint: str):
         self._endpoint = endpoint
         self._req_events = {}
@@ -27,7 +26,7 @@ class MSRPCChannel:
         self._ws = None
         self._msg_dispatcher = None
 
-    def add_hook(self, msg_type: str, hook: Callable[[Any], Coroutine], field_id:int=0):
+    def add_hook(self, msg_type: str, hook: Callable[[Any], Coroutine], field_id: int = 0):
         field = self._hook_fields[field_id]
         if msg_type not in field:
             field[msg_type] = []
@@ -59,7 +58,8 @@ class MSRPCChannel:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
-            self._ws = await websockets.connect(self._endpoint, origin=ms_host, ssl=ssl_context, additional_headers=EXTRA_HEADERS)
+            self._ws = await websockets.connect(self._endpoint, origin=ms_host, ssl=ssl_context,
+                                                additional_headers=EXTRA_HEADERS)
         self._msg_dispatcher = asyncio.create_task(self.dispatch_msg())
 
     def is_active(self):
@@ -87,7 +87,7 @@ class MSRPCChannel:
                 self._trigger_hooks(wrapper)
             elif type_byte == 3:  # RESPONSE
                 idx = int.from_bytes(msg[1:3], 'little')
-                if not idx in self._req_events:
+                if idx not in self._req_events:
                     continue
                 self._res[idx] = msg
                 self._req_events[idx].set()
@@ -112,7 +112,7 @@ class MSRPCChannel:
         await self._ws.send(pkt)
         await evt.wait()
 
-        if not idx in self._res:
+        if idx not in self._res:
             return None
         res = self._res[idx]
         del self._res[idx]

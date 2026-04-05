@@ -4,8 +4,6 @@ MS_HOST = "https://game.maj-soul.com"
 ENDPOINT = "wss://route-{}.maj-soul.com/"
 
 
-
-
 """
 Following enum values are constants used to communicate with the server.
 """
@@ -24,10 +22,12 @@ class OperationType(IntEnum):
     JIUZHONGJIUPAI = 10
     BABEI = 11
 
+
 class CPGType(IntEnum):
     CHI = 0
     PONG = 1
     MINGGANG = 2
+
 
 class AnGangAddGangType(IntEnum):
     ADDGANG = 2
@@ -42,6 +42,7 @@ class ModeInt(IntEnum):
     MODE_4S = 2
     MODE_3E = 11
     MODE_3S = 12
+
 
 # key: (player, is_east)
 MODE_INT = {(4, True): ModeInt.MODE_4E,
@@ -82,6 +83,7 @@ class LevelMain(IntEnum):
     SAINT = 5
     CELESTIAL = 7
 
+
 # key: (level_m, mode_int, is_east)
 MATCH_SID: dict[int, dict[int, int]] = {
     LevelMain.NOVICE: {
@@ -115,8 +117,6 @@ MATCH_SID: dict[int, dict[int, int]] = {
         ModeInt.MODE_3S: MatchSid.THRONE_3S,
     }
 }
-
-
 
 
 LEVEL_MAX_SCORE: dict[int, tuple[int, ...]] = {

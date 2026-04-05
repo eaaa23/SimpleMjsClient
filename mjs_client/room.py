@@ -1,18 +1,17 @@
-import logging
-from typing import Callable
-from functools import partial
-from sortedcontainers import SortedList
 from dataclasses import asdict
+from typing import Callable
+
+from sortedcontainers import SortedList
 
 from .accident import RoomKicked
-from .const import MODE_INT
-from .rule import DetailRule, get_mode_int, mode_int_is_east
 from .api import protocol_pb2 as pb
+from .const import MODE_INT
 from .exceptions import CreateRoomError, AddBotError, ClientError, StartRoomError
+from .rule import DetailRule, mode_int_is_east
 
 
 class Seat:
-    def __init__(self, account_id: int, nickname: str, ready: bool, is_robot:bool=False):
+    def __init__(self, account_id: int, nickname: str, ready: bool, is_robot: bool = False):
         self.account_id = account_id
         self.nickname = nickname
         self.ready = ready or is_robot
@@ -20,7 +19,8 @@ class Seat:
 
 
 class Room:
-    def __init__(self, client, *, player_count: int = 0, is_east: bool = None, detail_rule: DetailRule = None, join_room_protobuf: pb.Room = None):
+    def __init__(self, client, *, player_count: int = 0, is_east: bool = None, detail_rule: DetailRule = None,
+                 join_room_protobuf: pb.Room = None):
         self.client = client
 
         self._seq = -1
@@ -32,7 +32,8 @@ class Room:
             self.is_east = mode_int_is_east(join_room_protobuf.mode.mode)
             self.detail_rule = DetailRule.from_protobuf(join_room_protobuf.mode.detail_rule)
             self.room_id = join_room_protobuf.room_id
-            self._update_seats(join_room_protobuf.persons, join_room_protobuf.robots, join_room_protobuf.positions, join_room_protobuf.owner_id)
+            self._update_seats(join_room_protobuf.persons, join_room_protobuf.robots,
+                               join_room_protobuf.positions, join_room_protobuf.owner_id)
             for account_id in join_room_protobuf.ready_list:
                 self._update_ready(account_id, True)
             self.created: bool = True
@@ -56,12 +57,14 @@ class Room:
 
     async def _room_game_start_hook(self, data):
         data_pb = pb.NotifyRoomGameStart.FromString(data)
-        await self.client._start_game(data_pb.connect_token, data_pb.game_uuid, self.player_count, self.is_east, self.detail_rule, True)
+        await self.client._start_game(data_pb.connect_token, data_pb.game_uuid, self.player_count, self.is_east,
+                                      self.detail_rule, True)
 
     async def _room_player_update_hook(self, data):
         data = pb.NotifyRoomPlayerUpdate.FromString(data)
-        #logging.info(f"{data.seq=}")
-        self._update_queue.add((self._update_seats, data.seq, (data.player_list, data.robots, data.positions, data.owner_id)))
+        # logging.info(f"{data.seq=}")
+        self._update_queue.add((self._update_seats, data.seq,
+                                (data.player_list, data.robots, data.positions, data.owner_id)))
         self._flush_queue()
 
     async def _room_player_ready_hook(self, data):
@@ -75,9 +78,9 @@ class Room:
         await self.client._call_on_return_from_room()
 
     def _flush_queue(self):
-        #logging.info("Room _flush_queue")
+        # logging.info("Room _flush_queue")
         while self._update_queue:
-            #logging.info(f"_flush_queue: {self._update_queue}, {self._seq}")
+            # logging.info(f"_flush_queue: {self._update_queue}, {self._seq}")
             func, seq, args = self._update_queue[0]
             if seq == self._seq or self._seq == -1:
                 func, seq, args = self._update_queue[0]
@@ -122,12 +125,13 @@ class Room:
 
     async def create(self):
         mode_int = MODE_INT[(self.player_count, self.is_east)]
-        res = await self.client.lobby.create_room(pb.ReqCreateRoom(player_count=self.player_count, public_live=False,
-                                                            client_version_string=f"web-{self.client.version_to_force}",
-                                                            pre_rule='',
-                                                            mode=pb.GameMode(mode=mode_int, ai=True,
-                                                                             detail_rule=pb.GameDetailRule(**asdict(self.detail_rule)))
-                                                            ))
+        res = await self.client.lobby.create_room(
+            pb.ReqCreateRoom(player_count=self.player_count,
+                             public_live=False,
+                             client_version_string=f"web-{self.client.version_to_force}",
+                             pre_rule='',
+                             mode=pb.GameMode(mode=mode_int, ai=True,
+                                              detail_rule=pb.GameDetailRule(**asdict(self.detail_rule)))))
         CreateRoomError.check(res)
         self.room_id = res.room.room_id
         self._update_seats(res.room.persons, (), res.room.positions, res.room.owner_id)
@@ -143,7 +147,7 @@ class Room:
             raise StartRoomError("Player not all ready")
         await self.client.lobby.start_room(pb.ReqRoomStart())
 
-    async def ready(self, ready: bool, switch:bool=False):
+    async def ready(self, ready: bool, switch: bool = False):
         if switch:
             ready = not self.me().ready
         await self.client.lobby.ready_play(pb.ReqRoomReady(ready=ready))

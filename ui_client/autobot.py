@@ -1,14 +1,15 @@
-import logging
-from enum import IntEnum
 from dataclasses import dataclass
+from enum import IntEnum
+import logging
 
-from mjs_client.game.operation_container import OperationContainer
 from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation
+from mjs_client.game.operation_container import OperationContainer
+
+from .config import AutoBotInfo, AutoBotItemInfo
+from .scripts import PackageScriptManager
 
 from script_api import AbstractScript, Evaluation
-from ui_client.config import AutoBotInfo, AutoBotItemInfo
-from ui_client.scripts import PackageScriptManager
 
 
 class BotItemMode(IntEnum):
@@ -40,8 +41,10 @@ class BotItem:
 class AutoBotInstantiationError(Exception):
     pass
 
+
 class ScriptNotFound(AutoBotInstantiationError):
     pass
+
 
 class ScriptInstanceInitFail(AutoBotInstantiationError):
     pass
@@ -87,7 +90,8 @@ class AutoBot:
 
                 else:
                     candidates_id = evaluations_id
-                    initial_candidates_evaluation_list = {id(evaluation.operation): evaluation.value for evaluation in evaluations_list}
+                    initial_candidates_evaluation_list = {id(evaluation.operation): evaluation.value
+                                                          for evaluation in evaluations_list}
                     found_initial_candidates = True
 
         if found_initial_candidates:

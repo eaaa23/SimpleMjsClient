@@ -1,16 +1,16 @@
-import tkinter as tk
 from abc import abstractmethod
 from dataclasses import dataclass
 from functools import partial
+import tkinter as tk
 from typing import Callable, Any
 
 from PIL import ImageTk
 
 from mjs_client.const import OperationType
+from mjs_client.game.operation import AbstractOperation, PlayTile, Liqi, AbstractCallOperation
 from mjs_client.game.operation_container import OperationContainer
 from mjs_client.game.phases import GamePhase
 from mjs_client.game.gamestate import GameState, Open, OpenType, Discard
-from mjs_client.game.operation import AbstractOperation, PlayTile, Liqi, AbstractCallOperation
 
 from ...image import abs_anchor, Img, ROTATION_MATRICES
 
@@ -28,7 +28,8 @@ class TileInfo:
 
 
 class AbstractTileGroup:
-    def __init__(self, canvas: tk.Canvas, game_state: GameState, origin: tuple[int, int], rotation: int = 0, scale: float = 1,
+    def __init__(self, canvas: tk.Canvas, game_state: GameState,
+                 origin: tuple[int, int], rotation: int = 0, scale: float = 1,
                  bind_function: Callable[[AbstractOperation, tk.Event], Any] = None):
         self.canvas = canvas
         self.game_state = game_state
@@ -66,7 +67,8 @@ class AbstractTileGroup:
                 if info.spacing > 0:
                     i_increment = int(i_increment * info.spacing)
                 else:
-                    image = Img("{}.png".format(info.tile), rotation=self.rotation+info.rel_rotation, scale=self.scale, alpha=info.alpha)
+                    image = Img("{}.png".format(info.tile), rotation=self.rotation+info.rel_rotation,
+                                scale=self.scale, alpha=info.alpha)
                     self.image_cache.append(image)
 
                     j = self.img_height * (row_idx + 1) - info.addgang * self.img_width
@@ -96,7 +98,6 @@ class HandTileGroup(AbstractTileGroup):
         self.peis: int = 0
         self.last_tile_do_spacing: bool = False
         self.liqi_pressed: bool = False
-
 
     def update_state(self):
         self.opens = reversed(self.game_state.player_opens[self.seat])
@@ -147,7 +148,7 @@ class HandTileGroup(AbstractTileGroup):
         return [retval_0]
 
     def _get_hand_tile_info(self, tile: str) -> TileInfo:
-        #logging.info(f"In _get_hand_tile_info: {self.liqi_pressed}")
+        # logging.info(f"In _get_hand_tile_info: {self.liqi_pressed}")
         if self.rotation != 0:
             return TileInfo(tile=tile)
         if self.liqi_pressed:
@@ -168,12 +169,13 @@ class TestHandTileGroup(HandTileGroup):
 
 class DiscardTileGroup(AbstractTileGroup):
     CHANGEROWS = (0, 6, 12)
-    def __init__(self, canvas: tk.Canvas, game_state: GameState, origin: tuple[int, int], rotation: int = 0, scale: float = 1):
+
+    def __init__(self, canvas: tk.Canvas, game_state: GameState,
+                 origin: tuple[int, int], rotation: int = 0, scale: float = 1):
         super().__init__(canvas, game_state, origin, rotation, scale)
         self.discards: list[Discard] = []
 
     def update_state(self):
-        #logging.info(game_state.player_discards)
         self.discards = self.game_state.player_discards[self.seat]
 
     def grid_tile(self) -> list[list[TileInfo]]:
@@ -185,12 +187,12 @@ class DiscardTileGroup(AbstractTileGroup):
                 retval.append(current_row)
             current_row.append(TileInfo(tile=discard.tile, rel_rotation=int(discard.is_liqi),
                                         alpha=0.5 if discard.called else 1.0))
-        #logging.info(retval)
         return retval
 
 
 class DoraGroup(AbstractTileGroup):
-    def __init__(self, canvas: tk.Canvas, game_state: GameState, origin: tuple[int, int], rotation: int = 0, scale: float = 1):
+    def __init__(self, canvas: tk.Canvas, game_state: GameState,
+                 origin: tuple[int, int], rotation: int = 0, scale: float = 1):
         super().__init__(canvas, game_state, origin, rotation, scale)
         self.doras = []
 
@@ -203,7 +205,8 @@ class DoraGroup(AbstractTileGroup):
 
 
 class CallSelectionGroup(AbstractTileGroup):
-    def __init__(self, canvas: tk.Canvas, game_state: GameState, origin: tuple[int, int], rotation: int = 0, scale: float = 1,
+    def __init__(self, canvas: tk.Canvas, game_state: GameState,
+                 origin: tuple[int, int], rotation: int = 0, scale: float = 1,
                  bind_function: Callable[[AbstractOperation, tk.Event], Any] = None):
         super().__init__(canvas, game_state, origin, rotation, scale, bind_function)
         self.operation_list: list[AbstractCallOperation] = []

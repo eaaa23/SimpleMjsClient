@@ -3,13 +3,14 @@ from ..const import AnGangAddGangType, CPGType
 from ..exceptions import GameError
 
 from .phases import OperationPhase
-from .tiles_util import tile_cmp_key
+from .tiles_util import tile_sort_key
 from .gamestate import GameState, Discard, Open, OpenType, RoundResult, WinInfo
 
 
 class AbstractGameAction:
     data_class: type(object)
     operation_delay: float = 0.0
+
     def __init__(self, step, data):
         self.step = step
         self.data = data
@@ -20,6 +21,7 @@ class AbstractGameAction:
     def update(self, game_state: GameState) -> OperationPhase:
         return OperationPhase.NO_OPERATION
 
+
 class GameActionWithLiqiSuccess(AbstractGameAction):
     def update_liqi(self, game_state: GameState):
         liqi = self.data.liqi
@@ -27,18 +29,25 @@ class GameActionWithLiqiSuccess(AbstractGameAction):
             game_state.liqibang = liqi.liqibang
             game_state.scores[liqi.seat] = liqi.score
 
+
 class PlaceHolder(AbstractGameAction):
     pass
+
 
 class ActionMJStart(AbstractGameAction):
     data_class = pb.ActionMJStart
 
+
 class ActionNewRound(AbstractGameAction):
     data_class = pb.ActionNewRound
     operation_delay = 3.0
+
     def update(self, game_state: GameState) -> OperationPhase:
-        game_state.current_chang, game_state.current_ju, game_state.current_benchang = self.data.chang, self.data.ju, self.data.ben
-        game_state.my_hand = sorted(self.data.tiles, key=tile_cmp_key)
+        game_state.current_chang = self.data.chang
+        game_state.current_ju = self.data.ju
+        game_state.current_benchang = self.data.ben
+
+        game_state.my_hand = sorted(self.data.tiles, key=tile_sort_key)
         game_state.doras = list(self.data.doras)
         for i, score in enumerate(self.data.scores):
             game_state.scores[i] = score
@@ -53,6 +62,7 @@ class ActionNewRound(AbstractGameAction):
 
 class ActionDealTile(GameActionWithLiqiSuccess):
     data_class = pb.ActionDealTile
+
     def update(self, game_state: GameState) -> OperationPhase:
         self.update_liqi(game_state)
         game_state.player_hand_size[self.data.seat] += 1
@@ -73,9 +83,10 @@ class ActionDealTile(GameActionWithLiqiSuccess):
 
 class ActionDiscardTile(AbstractGameAction):
     data_class = pb.ActionDiscardTile
+
     def update(self, game_state: GameState) -> OperationPhase:
         game_state.last_discard = Discard(tile=self.data.tile, moqie=self.data.moqie,
-                                                                  called=False, is_liqi=(self.data.is_liqi or self.data.is_wliqi))
+                                          called=False, is_liqi=(self.data.is_liqi or self.data.is_wliqi))
         game_state.player_discards[self.data.seat].append(game_state.last_discard)
         game_state.player_hand_size[self.data.seat] -= 1
         if self.data.is_wliqi:
@@ -86,13 +97,14 @@ class ActionDiscardTile(AbstractGameAction):
             game_state.doras = list(self.data.doras)
         if self.data.seat == game_state.my_seat:
             game_state.my_hand.remove(self.data.tile)
-            game_state.my_hand.sort(key=tile_cmp_key)
+            game_state.my_hand.sort(key=tile_sort_key)
             game_state.me_just_dealt_tile = False
         return OperationPhase.OTHER_PLAYED
 
 
 class ActionChiPengGang(GameActionWithLiqiSuccess):
     data_class = pb.ActionChiPengGang
+
     def update(self, game_state: GameState) -> OperationPhase:
         for i, from_ in enumerate(self.data.froms):
             if from_ != self.data.seat:
@@ -103,7 +115,8 @@ class ActionChiPengGang(GameActionWithLiqiSuccess):
         tiles = list(self.data.tiles)
         tile_from_other = tiles[i]
         del tiles[i]
-        game_state.player_opens[self.data.seat].append(Open(type=self.data.type, tiles_self=tiles, direction=direction, tile_from_other=tile_from_other))
+        game_state.player_opens[self.data.seat].append(Open(type=self.data.type, tiles_self=tiles,
+                                                            direction=direction, tile_from_other=tile_from_other))
         game_state.player_hand_size[self.data.seat] -= (3 if self.data.type == CPGType.MINGGANG else 2)
         game_state.last_discard.called = True
         if self.data.seat == game_state.my_seat:
@@ -115,6 +128,7 @@ class ActionChiPengGang(GameActionWithLiqiSuccess):
 
 class ActionAnGangAddGang(AbstractGameAction):
     data_class = pb.ActionAnGangAddGang
+
     def update(self, game_state: GameState) -> OperationPhase:
         if self.data.type == AnGangAddGangType.ANGANG:
             if self.data.tiles[0] in ('0', '5'):
@@ -132,20 +146,22 @@ class ActionAnGangAddGang(AbstractGameAction):
         elif self.data.type == AnGangAddGangType.ADDGANG:
             game_state.player_hand_size[self.data.seat] -= 1
             for open_ in game_state.player_opens[self.data.seat]:
-                if open_.type == OpenType.PONG and open_.tile_from_other.replace('0', '5') == self.data.tiles.replace('0', '5'):
+                if open_.type == OpenType.PONG and \
+                        open_.tile_from_other.replace('0', '5') == self.data.tiles.replace('0', '5'):
                     open_.type = OpenType.ADDGANG
                     open_.tiles_self.append(self.data.tiles)
                     if self.data.seat == game_state.my_seat:
                         game_state.my_hand.remove(self.data.tiles)
                     break
             else:
-                #logging.warn(f"AddGang cannot find corresponding PONG-fulu")
+                # logging.warn(f"AddGang cannot find corresponding PONG-fulu")
                 pass
         return OperationPhase.AFTER_OTHER_ZIMING
 
 
 class ActionBaBei(AbstractGameAction):
     data_class = pb.ActionBaBei
+
     def update(self, game_state: GameState) -> OperationPhase:
         game_state.player_peis[self.data.seat].append(self.data.moqie)
         game_state.player_hand_size[self.data.seat] -= 1
@@ -165,28 +181,34 @@ class RoundEnder(AbstractGameAction):
 
 class ActionHule(RoundEnder):
     data_class = pb.ActionHule
+
     def result(self, game_state: GameState) -> RoundResult:
-        return RoundResult(shown_hands={hule.seat: (list(hule.hand) + [hule.hu_tile], game_state.player_opens[hule.seat]) for hule in self.data.hules},
-                           delta_scores=list(self.data.delta_scores),
-                           win=[WinInfo(seat=hule.seat,
-                                        yakus={fan.id: fan.val for fan in hule.fans},
-                                        fan=hule.count,
-                                        fu=hule.fu,
-                                        score=hule.dadian,
-                                        tsumo=hule.zimo,
-                                        yakuman=hule.yiman) for hule in self.data.hules])
+        return RoundResult(
+            shown_hands={hule.seat: (list(hule.hand) + [hule.hu_tile], game_state.player_opens[hule.seat])
+                         for hule in self.data.hules},
+            delta_scores=list(self.data.delta_scores),
+            win=[WinInfo(seat=hule.seat,
+                         yakus={fan.id: fan.val for fan in hule.fans},
+                         fan=hule.count,
+                         fu=hule.fu,
+                         score=hule.dadian,
+                         tsumo=hule.zimo,
+                         yakuman=hule.yiman) for hule in self.data.hules])
 
 
 class ActionLiuJu(RoundEnder):
     data_class = pb.ActionLiuJu
+
     def result(self, game_state: GameState) -> RoundResult:
         return RoundResult(shown_hands={}, delta_scores=[0 for i in range(game_state.player_count)], win=[])
 
 
 class ActionNoTile(RoundEnder):
     data_class = pb.ActionNoTile
+
     def result(self, game_state: GameState) -> RoundResult:
-        shown_hands = {i: (player.hand, game_state.player_opens[i]) for i, player in enumerate(self.data.players) if player.tingpai}
+        shown_hands = {i: (player.hand, game_state.player_opens[i])
+                       for i, player in enumerate(self.data.players) if player.tingpai}
         if self.data.scores:
             delta_scores = list(self.data.scores[0].delta_scores)
             delta_scores.extend([0] * (game_state.player_count - len(delta_scores)))
@@ -195,8 +217,13 @@ class ActionNoTile(RoundEnder):
         return RoundResult(shown_hands=shown_hands, delta_scores=delta_scores, win=[])
 
 
-
-NAME_DICT = {"ActionNewRound": ActionNewRound, "ActionMJStart": ActionMJStart, "ActionDealTile": ActionDealTile,
-             "ActionDiscardTile": ActionDiscardTile, "ActionChiPengGang": ActionChiPengGang,
-             "ActionAnGangAddGang": ActionAnGangAddGang, "ActionBaBei": ActionBaBei, "ActionHule": ActionHule,
-             "ActionLiuJu": ActionLiuJu, "ActionNoTile": ActionNoTile}
+NAME_DICT = {"ActionNewRound": ActionNewRound,
+             "ActionMJStart": ActionMJStart,
+             "ActionDealTile": ActionDealTile,
+             "ActionDiscardTile": ActionDiscardTile,
+             "ActionChiPengGang": ActionChiPengGang,
+             "ActionAnGangAddGang": ActionAnGangAddGang,
+             "ActionBaBei": ActionBaBei,
+             "ActionHule": ActionHule,
+             "ActionLiuJu": ActionLiuJu,
+             "ActionNoTile": ActionNoTile}

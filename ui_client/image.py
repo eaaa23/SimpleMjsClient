@@ -1,6 +1,6 @@
+import os
 import tkinter as tk
 from typing import Callable
-import os
 
 from PIL import Image, ImageTk
 
@@ -8,7 +8,7 @@ from PIL import Image, ImageTk
 class _Image:
     def __init__(self, path: str):
         self.path = path
-        self.src: Image.Image = None
+        self.src: Image.Image | None = None
         self.images: dict[tuple[int, int, float], list[Image.Image]] = {}
 
     def get(self, rotation: int, scale: float, alpha: float) -> Image.Image:
@@ -23,9 +23,9 @@ class _Image:
                 a = round(256 * alpha)
                 src_adjusted.putdata([(r, g, b, a) for r, g, b, _ in src_adjusted.getdata()])
             self.images[new_width, new_height, alpha] = [src_adjusted,
-                                                  src_adjusted.transpose(Image.ROTATE_90),
-                                                  src_adjusted.transpose(Image.ROTATE_180),
-                                                  src_adjusted.transpose(Image.ROTATE_270)]
+                                                         src_adjusted.transpose(Image.ROTATE_90),
+                                                         src_adjusted.transpose(Image.ROTATE_180),
+                                                         src_adjusted.transpose(Image.ROTATE_270)]
 
         return self.images[new_width, new_height, alpha][rotation]
 
@@ -55,6 +55,7 @@ ROTATION_MATRICES: list[Callable[[int, int], tuple[int, int]]] = [
 ]
 
 ANCHOR = [tk.NW, tk.SW, tk.SE, tk.NE]
+
 
 def abs_anchor(rotation, rel_anchor):
     """Get absolute anchor"""

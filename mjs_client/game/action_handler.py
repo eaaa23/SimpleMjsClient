@@ -1,13 +1,12 @@
 import asyncio
+import logging
 
 from sortedcontainers import SortedList
 
-from ..const import OperationType
 from .action import AbstractGameAction, RoundEnder
 from .gamestate import GameState, EndResult
-from .operation import AbstractOperation, OPERATION_CLASS_DICT
-from .phases import GamePhase
 from .operation_container import OperationContainer
+from .phases import GamePhase
 
 
 class GameActionHandler:
@@ -32,7 +31,8 @@ class GameActionHandler:
         for i in range(len(self.action_queue)):
             this_action: AbstractGameAction = self.action_queue[0]
             if self.next_step > this_action.step:
-                raise ValueError(f"GameActionQueue Failure: GameActionHandler ptr at {self.next_step}, received action step={this_action.step}")
+                raise ValueError(f"GameActionQueue Failure: GameActionHandler ptr at {self.next_step}, "
+                                 f"received action step={this_action.step}")
             elif self.next_step == this_action.step:
                 if isinstance(this_action, RoundEnder):
                     self.game_state.round_result = this_action.result(self.game_state)
@@ -51,11 +51,10 @@ class GameActionHandler:
                 self.action_queue.pop(0)
                 self.next_step += 1
                 self.game.client.update_event.set()
-                #logging.info(f"ActionHandler updated step from {this_action.step} to {self.next_step}")
+                # logging.info(f"ActionHandler updated step from {this_action.step} to {self.next_step}")
             else:
-                #logging.info(f"ActionHandler blocking, now ptr at {self.next_step}, this_action at {this_action.step}")
+                logging.warn(f"ActionHandler blocking, now ptr at {self.next_step}, this_action at {this_action.step}")
                 break
-        #logging.info(f"Debug-gamestate: my_hand={self.game_state.my_hand}")
 
     def end_game(self, result_protobuf):
         self.clear_actions()

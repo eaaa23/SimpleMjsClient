@@ -1,9 +1,8 @@
-import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from mjs_client.game.operation import AbstractOperation
 from mjs_client.game.gamestate import GameState
+from mjs_client.game.operation import AbstractOperation
 from mjs_client.game.operation_container import OperationContainer
 from mjs_client.game.phases import OperationPhase
 
@@ -46,6 +45,3 @@ class AbstractScript(ABC):
     @abstractmethod
     def other_call_in_turn(self, operations: OperationContainer, game_state: GameState) -> list[Evaluation]:
         raise NotImplementedError
-
-
-

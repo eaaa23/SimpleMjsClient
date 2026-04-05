@@ -1,4 +1,4 @@
-from dataclasses import dataclass, fields, asdict
+from dataclasses import dataclass, fields
 
 from .const import ModeInt
 
@@ -28,6 +28,7 @@ def get_default_rule(player_count: int) -> DetailRule:
         return DetailRule(init_point=35000, fandian=40000, dora_count=2)
     raise ValueError("player_count must be 3 or 4")
 
+
 def get_mode_int(player_count: int, is_east: bool) -> int:
     if player_count == 4:
         return ModeInt.MODE_4E if is_east else ModeInt.MODE_4S
@@ -35,8 +36,10 @@ def get_mode_int(player_count: int, is_east: bool) -> int:
         return ModeInt.MODE_3E if is_east else ModeInt.MODE_3S
     raise ValueError("player_count must be 3 or 4")
 
+
 def mode_int_is_east(mode_int: int) -> bool:
     return mode_int in (ModeInt.MODE_3E, ModeInt.MODE_4E)
+
 
 def is_valid_point(point: int) -> bool:
     return point % 100 == 0 and 0 <= point <= 200000

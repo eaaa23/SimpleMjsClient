@@ -1,17 +1,16 @@
-import logging
 import tkinter as tk
 from tkinter import messagebox
-from functools import partial
 
-from .scripts import ScriptsTreeviewList
-from ....config import config, AutoBotInfo, AutoBotItemInfo
-from ....language import tr, get_available_languages, get_language_from_name
+from ....config import config, AutoBotInfo
+from ....language import tr
+from ....scripts import ScriptClassWrapper, PackageScriptManager
 
 from ... import AbstractScreen
 from ...treeview_list import TreeviewList, TreeviewColumn
 
 from .. import SettingsSubframe
-from ....scripts import ScriptClassWrapper, PackageScriptManager
+
+from .scripts import ScriptsTreeviewList
 
 
 class BotConfigScreen(AbstractScreen):
@@ -44,12 +43,16 @@ class BotConfigScreen(AbstractScreen):
         self.bot_items_label = tk.Label(self.bot_frame)
         self.bot_items_label.grid(row=1, column=0, sticky="nw")
 
-        self.bot_items_treeview_list = TreeviewList(self.bot_frame,
-                                                    columns=(TreeviewColumn("package", self.scripts_manager.get_package_name),
-                                                             TreeviewColumn("class", self.scripts_manager.get_class_name),
-                                                             TreeviewColumn("threshold", lambda autobot_item_info: "{:.2f}".format(autobot_item_info.threshold))),
-                                                    tag_seeker=lambda autobot_item_info: () if self.scripts_manager.check_bot_item_info_valid(autobot_item_info) else "red",
-                                                    selectmode=tk.BROWSE)
+        self.bot_items_treeview_list = (
+            TreeviewList(self.bot_frame,
+                         columns=(TreeviewColumn("package", self.scripts_manager.get_package_name),
+                                  TreeviewColumn("class", self.scripts_manager.get_class_name),
+                                  TreeviewColumn("threshold",
+                                                 lambda autobot_item_info: "{:.2f}".format(autobot_item_info.threshold))
+                                  ),
+                         tag_seeker=lambda autobot_item_info:
+                         () if self.scripts_manager.check_bot_item_info_valid(autobot_item_info) else "red",
+                         selectmode=tk.BROWSE))
         self.bot_items_treeview_list.tag_configure("red", foreground="red")
         self.bot_items_treeview_list.grid(row=1, column=1)
 
@@ -160,7 +163,7 @@ class BotConfigScreen(AbstractScreen):
     def on_user_shut_window(self) -> bool:
         if self.modified:
             res = messagebox.askyesnocancel(tr("settings.autobot.config.dialog.title_warning"),
-                                        tr("settings.autobot.config.dialog.save"))
+                                            tr("settings.autobot.config.dialog.save"))
         else:
             # Not modified, res should be False, but it's better to set it to True
             # Prevent corner case when the list is changed but self.modified == False
@@ -219,7 +222,8 @@ class BotConfigScreen(AbstractScreen):
             if value_float > 1.0 or value_float < 0.0:
                 raise ValueError
         except ValueError:
-            messagebox.showerror(tr("settings.autobot.config.dialog.title_error"), tr("settings.autobot.config.dialog.threshold_invalid"))
+            messagebox.showerror(tr("settings.autobot.config.dialog.title_error"),
+                                 tr("settings.autobot.config.dialog.threshold_invalid"))
             return
         selected_enumeration = self.bot_items_treeview_list.get_selected_enumeration()
         if not selected_enumeration:
@@ -240,11 +244,14 @@ class AutoBotSettingsFrame(SettingsSubframe):
         self.bot_display_frame = tk.Frame(self.parent)
         self.bot_display_frame.grid(row=0, column=1)
 
-        self.bots_treeview_list = TreeviewList(self.bot_display_frame,
-                                               columns=(TreeviewColumn("name", lambda autobot_info: autobot_info.name),
-                                                        TreeviewColumn("default", lambda autobot_info: tr(
-                                                            "settings.autobot.display.yes") if autobot_info.name == config.default_autobot_name else "")),
-                                               selectmode=tk.BROWSE)
+        self.bots_treeview_list = (
+            TreeviewList(self.bot_display_frame,
+                         columns=(TreeviewColumn("name", lambda autobot_info: autobot_info.name),
+                                  TreeviewColumn("default",
+                                                 lambda autobot_info: tr("settings.autobot.display.yes")
+                                                 if autobot_info.name == config.default_autobot_name
+                                                 else "")),
+                         selectmode=tk.BROWSE))
         self.bots_treeview_list.grid(row=0, column=0, sticky="w")
 
         self.button_frame = tk.Frame(self.bot_display_frame)

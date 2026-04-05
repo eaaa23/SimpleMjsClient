@@ -3,19 +3,19 @@ import tkinter as tk
 
 from mjs_client.client import ClientPhase
 from mjs_client.game.game import Game
-from mjs_client.game.operation_container import OperationContainer
-from mjs_client.game.phases import GamePhase, OperationPhase
 from mjs_client.game.gamestate import GameState
 from mjs_client.game.operation import AbstractOperation, AbstractCallOperation
-from .assistant import GameAssistantFrame
+from mjs_client.game.operation_container import OperationContainer
+from mjs_client.game.phases import GamePhase, OperationPhase
 
 from ...image import ROTATION_MATRICES, abs_anchor
 from ...language import tr
 
 from ..abstract import AbstractScreen
 
-from .tile_group import CallSelectionGroup, HandTileGroup, DiscardTileGroup, DoraGroup
+from .assistant import GameAssistantFrame
 from .operation_buttons import OperationButtonGroup
+from .tile_group import CallSelectionGroup, HandTileGroup, DiscardTileGroup, DoraGroup
 
 
 class Liqibang:
@@ -45,13 +45,14 @@ class Liqibang:
             self.created = False
 
 
-
 class CallSelectionSubframe:
     def __init__(self, call_selection_group: CallSelectionGroup, rect_size: tuple[int, int]):
         self.group = call_selection_group
         self.canvas = self.group.canvas
-        self.rect: tuple[int, int, int, int] = (self.group.origin[0], self.group.origin[1],
-                                                self.group.origin[0] + rect_size[0], self.group.origin[1] + rect_size[1])
+        self.rect: tuple[int, int, int, int] = (self.group.origin[0],
+                                                self.group.origin[1],
+                                                self.group.origin[0] + rect_size[0],
+                                                self.group.origin[1] + rect_size[1])
         self.rect_id: int = 0
         self.created: bool = False
 
@@ -76,6 +77,7 @@ class GameScreen(AbstractScreen):
     CANVAS_HEIGHT = 800
     CANVAS_MID_X = CANVAS_WIDTH // 2
     CANVAS_MID_Y = CANVAS_HEIGHT // 2
+
     def __init__(self, parent, ui):
         super().__init__(parent, ui)
 
@@ -86,7 +88,8 @@ class GameScreen(AbstractScreen):
         self.canvas = tk.Canvas(self.frame, width=self.CANVAS_WIDTH, height=self.CANVAS_HEIGHT)
         self.canvas.grid(row=0, column=0)
 
-        self.canvas.create_rectangle(self.CANVAS_MID_X-120, self.CANVAS_MID_Y-120, self.CANVAS_MID_X+120, self.CANVAS_MID_Y+120,
+        self.canvas.create_rectangle(self.CANVAS_MID_X-120, self.CANVAS_MID_Y-120,
+                                     self.CANVAS_MID_X+120, self.CANVAS_MID_Y+120,
                                      outline="black")
 
         self.operation_button_group = OperationButtonGroup(self, (648, 732), tk.SE, (64, 25))
@@ -103,7 +106,8 @@ class GameScreen(AbstractScreen):
             rot_matrix = ROTATION_MATRICES[rotation]
             # hand
             rel_x, rel_y = rot_matrix(-312, 332)
-            self.hand_tile_groups.append(HandTileGroup(self.canvas, self.game_state, self.operation_button_group, self.possible_operations,
+            self.hand_tile_groups.append(HandTileGroup(self.canvas, self.game_state, self.operation_button_group,
+                                                       self.possible_operations,
                                                        (self.CANVAS_MID_X+rel_x, self.CANVAS_MID_Y+rel_y),
                                                        rotation, 0.5, self.tile_bind_func))
 
@@ -192,12 +196,11 @@ class GameScreen(AbstractScreen):
         self.liqibang_changgong.draw(True)
         self.label_changgong.config(text="x {}".format(self.game_state.liqibang))
         self.dora_group.redraw()
-        #logging.info(f"GameScreen update: show_end_screen={self.show_end_screen}, phase={self.game_state.phase}")
-        #logging.info(f"Round results label config: {self.label_round_result.config()}")
         if self.game_state.phase == GamePhase.BETWEEN_ROUNDS:
             if not self.show_end_screen:
                 self.label_round_result.config(text=self.get_round_result_text())
-                self.frame_round_result_id = self.canvas.create_window(self.CANVAS_MID_X, self.CANVAS_MID_Y, anchor=tk.CENTER, window=self.frame_round_result)
+                self.frame_round_result_id = self.canvas.create_window(self.CANVAS_MID_X, self.CANVAS_MID_Y,
+                                                                       anchor=tk.CENTER, window=self.frame_round_result)
                 for rotation in range(4):
                     seat = (self.game_state.my_seat + rotation) % 4
                     if seat >= self.game_state.player_count:
@@ -237,9 +240,9 @@ class GameScreen(AbstractScreen):
     def get_game_result_text(self) -> str:
         lines = []
         for rank, end_result in enumerate(self.game_state.game_result):
-            lines.append(tr("game.result").format(rank+1, self.game.player_names[end_result.seat], end_result.point, end_result.score, end_result.pt))
+            lines.append(tr("game.result").format(rank+1, self.game.player_names[end_result.seat],
+                                                  end_result.point, end_result.score, end_result.pt))
         return "\n".join(lines)
-
 
     def update_label_text_and_liqi(self, rotation: int):
         seat = (self.game_state.my_seat + rotation) % 4
@@ -271,4 +274,3 @@ class GameScreen(AbstractScreen):
                 self.label_round_result.config(text=self.get_game_result_text())
         else:
             self.controller.game_confirm_new_round()
-

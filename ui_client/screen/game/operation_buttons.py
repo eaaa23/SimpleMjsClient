@@ -4,7 +4,7 @@ from typing import Literal
 
 from mjs_client.const import OperationType
 from mjs_client.game.gamestate import GameState
-from mjs_client.game.operation import AbstractOperation
+from mjs_client.game.operation import AbstractOperation, AbstractCancellableOperation
 from mjs_client.game.operation_container import OperationContainer
 
 from ...language import tr
@@ -14,6 +14,7 @@ class AbstractOperationButton:
     code: int
     sort_index: int = -1
     text_key: str = ""
+
     def __init__(self, button_group, operation_list: list[AbstractOperation | None]):
         self.group: OperationButtonGroup = button_group
         self.operation_list = operation_list
@@ -43,20 +44,24 @@ class ChiButton(AbstractCallButton):
     sort_index = 4
     text_key = "game.operation.chi"
 
+
 class PongButton(AbstractCallButton):
     code = OperationType.PONG
     sort_index = 3
     text_key = "game.operation.pong"
+
 
 class MingGangButton(AbstractCallButton):
     code = OperationType.MINGGANG
     sort_index = 5
     text_key = "game.operation.minggang"
 
+
 class AnGangButton(AbstractCallButton):
     code = OperationType.ANGANG
     sort_index = 7
     text_key = "game.operation.angang"
+
 
 class AddGangButton(AbstractCallButton):
     code = OperationType.ADDGANG
@@ -82,17 +87,17 @@ class PeiButton(AbstractOperationButton):
     text_key = "game.operation.pei"
 
 
-
 class LiqiButton(AbstractOperationButton):
     code = OperationType.LIQI
     sort_index = 100
     text_key = "game.operation.liqi"
+
     def __init__(self, button_group, operation_list):
         super().__init__(button_group, operation_list)
 
     def on_click(self):
         self.group.liqi_pressed = not self.group.liqi_pressed
-        #self.button.config(bg="#808080" if self.group.liqi_pressed else "#FFFFFF")
+        # self.button.config(bg="#808080" if self.group.liqi_pressed else "#FFFFFF")
         self.group.screen.hand_tile_groups[0].redraw()
 
     def hide(self):
@@ -127,7 +132,8 @@ class OperationButtonGroup:
         self.button_size = button_size
         self.game_state: GameState = game_screen.game_state
         self.possible_operations: OperationContainer = game_screen.possible_operations
-        self._buttons: dict[int, AbstractOperationButton] = {cls.code: cls(self, []) for cls in OPERATION_BUTTON_CLASSES}
+        self._buttons: dict[int, AbstractOperationButton] = {cls.code: cls(self, [])
+                                                             for cls in OPERATION_BUTTON_CLASSES}
         self._cancel_button = CancelButton(self, [None])
         self.active_buttons: list[AbstractOperationButton] = []
         self.liqi_pressed: bool = False
@@ -138,8 +144,9 @@ class OperationButtonGroup:
         logging.info(f"OperationButtonGroup update: {self.possible_operations}")
         for code, operations in self.possible_operations.items():
             if code in self._buttons:
-                if hasattr(operations[-1], "cancel_operation") and operations[-1].cancel_operation:
-                    cancel_button_op = operations[-1]
+                last_operation = operations[-1]
+                if isinstance(last_operation, AbstractCancellableOperation) and last_operation.cancel_operation:
+                    cancel_button_op = last_operation
                     oplist_for_button = operations[:-1]
                 else:
                     oplist_for_button = operations
@@ -152,7 +159,6 @@ class OperationButtonGroup:
         logging.info(f"OperationButtonGroup active_buttons: {self.active_buttons}")
         self.show_buttons()
 
-
     def clear_buttons(self):
         for active_button in self.active_buttons:
             active_button.hide()
@@ -164,10 +170,3 @@ class OperationButtonGroup:
             x = self.origin[0] + self.col_flip * self.button_size[0] * (i % 2)
             y = self.origin[1] + self.row_flip * self.button_size[1] * (i // 2)
             active_button.show(x, y)
-
-
-
-
-
-
-

@@ -1,9 +1,7 @@
-from enum import IntEnum
 from dataclasses import dataclass, field
+from enum import IntEnum
 
 from .phases import GamePhase
-from .tiles_util import tile_cmp_key, TILES_TO_INDEX34, SANMA_INVALID_TILES
-
 
 
 class OpenType(IntEnum):
@@ -17,6 +15,7 @@ class OpenType(IntEnum):
     MINGGANG = 2
     ANGANG = 3
     ADDGANG = 4
+
 
 class OpenDirection(IntEnum):
     NONE = 0
@@ -32,12 +31,14 @@ class Open:
     direction: int = OpenDirection.NONE
     tile_from_other: str = ""
 
+
 @dataclass
 class Discard:
     tile: str
     moqie: bool
     called: bool
     is_liqi: bool
+
 
 @dataclass
 class EndResult:
@@ -46,9 +47,11 @@ class EndResult:
     score: float = 0.0
     pt: int = 0
 
+
 class RoundResultType(IntEnum):
     HULE = 0
     LIUJU = 1
+
 
 @dataclass
 class WinInfo:
@@ -59,6 +62,7 @@ class WinInfo:
     score: int
     tsumo: bool
     yakuman: bool = False
+
 
 @dataclass
 class RoundResult:
@@ -100,17 +104,3 @@ class GameState:
         self.player_opens: list[list[Open]] = [[] for i in range(4)]
         self.player_peis: list[list[bool]] = [[] for i in range(4)]
         self.player_liqis = [0] * 4
-
-    """
-    def __str__(self):
-        retval = f"\nCurrent chang={self.current_chang}, ju={self.current_ju}, ben={self.current_benchang}\n\n"
-        for i in range(self.player_count):
-            retval += f"seat {i}{' (me)' if i == self.my_seat else ''}, liqistate={self.player_liqis[i]}, score={self.scores[i]}\n" \
-                      f"Shepai: {''.join(shepai.tile for shepai in self.player_discards[i])}\n" \
-                      f"Fulu: {' '.join(fulu.to_string(i) for fulu in self.player_opens[i])}    BaBei: {len(self.player_peis[i])}\n"
-            if i == self.my_seat:
-                retval += f'Original hand: {''.join(self.my_hand)}\n'
-                retval += ''.join(sorted(self.my_hand, key=tile_cmp_key)) + "\n"
-            retval += "\n"
-        return retval
-        """
