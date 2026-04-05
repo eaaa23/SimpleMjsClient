@@ -52,6 +52,7 @@ class RoomSeatFrame:
 
 class RoomScreen(AbstractScreen):
     PHASE = ClientPhase.INROOM
+
     def __init__(self, parent, ui):
         super().__init__(parent, ui)
 

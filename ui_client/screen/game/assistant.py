@@ -11,10 +11,10 @@ from ...scripts import ScriptClassWrapper
 
 
 class GameAssistantFrame:
-    def __init__(self, parent, screen: AbstractScreen):
-        self.parent = parent
+    def __init__(self, parent: tk.Misc, screen: AbstractScreen):
+        self.parent: tk.Misc = parent
         self.ui = screen.ui
-        self.screen = screen
+        self.screen: AbstractScreen = screen
 
         self.first_row = tk.Frame(self.parent)
         self.first_row.grid(row=0, column=0)

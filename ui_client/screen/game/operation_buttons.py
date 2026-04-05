@@ -15,7 +15,7 @@ class AbstractOperationButton:
     sort_index: int = -1
     text_key: str = ""
 
-    def __init__(self, button_group, operation_list: list[AbstractOperation | None]):
+    def __init__(self, button_group: "OperationButtonGroup", operation_list: list[AbstractOperation | None]):
         self.group: OperationButtonGroup = button_group
         self.operation_list = operation_list
         self.button = tk.Button(self.group.canvas, text=tr(self.text_key), command=self.on_click)
@@ -92,7 +92,7 @@ class LiqiButton(AbstractOperationButton):
     sort_index = 100
     text_key = "game.operation.liqi"
 
-    def __init__(self, button_group, operation_list):
+    def __init__(self, button_group: "OperationButtonGroup", operation_list: list[AbstractOperation | None]):
         super().__init__(button_group, operation_list)
 
     def on_click(self):

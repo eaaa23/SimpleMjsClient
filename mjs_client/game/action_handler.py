@@ -1,7 +1,8 @@
-import asyncio
 import logging
 
 from sortedcontainers import SortedList
+
+from ..api import protocol_pb2 as pb
 
 from .action import AbstractGameAction, RoundEnder
 from .gamestate import GameState, EndResult
@@ -12,12 +13,10 @@ from .phases import GamePhase
 class GameActionHandler:
     def __init__(self, game, player_count: int, is_east: bool, my_seat: int):
         self.game = game
-        self.action_queue = SortedList()
+        self.action_queue: SortedList[AbstractGameAction] = SortedList()
         self.game_state: GameState = GameState(player_count, is_east, my_seat)
-        self.possible_operations = OperationContainer()
-        self.next_step = 0
-        self.lock = asyncio.Event()
-        self.lock.set()
+        self.possible_operations: OperationContainer = OperationContainer()
+        self.next_step: int = 0
 
     def add_action(self, action: AbstractGameAction):
         self.action_queue.add(action)
@@ -27,7 +26,6 @@ class GameActionHandler:
         self.next_step = 0
 
     async def update(self):
-        await self.lock.wait()
         for i in range(len(self.action_queue)):
             this_action: AbstractGameAction = self.action_queue[0]
             if self.next_step > this_action.step:
@@ -56,7 +54,7 @@ class GameActionHandler:
                 logging.warn(f"ActionHandler blocking, now ptr at {self.next_step}, this_action at {this_action.step}")
                 break
 
-    def end_game(self, result_protobuf):
+    def end_game(self, result_protobuf: pb.GameEndResult):
         self.clear_actions()
         self.game_state.game_result = [EndResult(seat=player_item.seat,
                                                  point=player_item.part_point_1,

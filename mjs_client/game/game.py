@@ -40,9 +40,9 @@ class Game:
         self.fasttest = FastTest(self.channel)
 
         await self.channel.connect(self.client.ms_host)
-        res_auth = await self.fasttest.auth_game(pb.ReqAuthGame(account_id=self.client.account_id,
-                                                                token=self.connect_token,
-                                                                game_uuid=self.game_uuid))
+        res_auth: pb.ResAuthGame = await self.fasttest.auth_game(pb.ReqAuthGame(account_id=self.client.account_id,
+                                                                                token=self.connect_token,
+                                                                                game_uuid=self.game_uuid))
 
         self.my_seat = res_auth.seat_list.index(self.client.account_id)
         for account_id in res_auth.seat_list:
@@ -61,10 +61,10 @@ class Game:
         self.game_start_event.set()
 
     async def _hook_action_prototype(self, data):
-        action_prototype = pb.ActionPrototype.FromString(data)
+        action_prototype: pb.ActionPrototype = pb.ActionPrototype.FromString(data)
         if action_prototype.name not in action.NAME_DICT:
             logging.warn(f"ActionPrototype {action_prototype.name} not in action.NAME_DICT, change to PlaceHolder")
-            self.action_handler.add_action(action.PlaceHolder(action_prototype.step, action_prototype.data))
+            self.action_handler.add_action(action.PlaceHolder(action_prototype.step, None))
         else:
             try:
                 data_decoded = decode(action_prototype.data)
@@ -80,13 +80,12 @@ class Game:
                 else:
                     logging.warn(f"ActionPrototype {action_prototype.name}, step={action_prototype.step} "
                                  f"not found in ResSyncGame! Change to PlaceHolder")
-                    self.action_handler.add_action(action.PlaceHolder(action_prototype.step, action_prototype.data))
+                    self.action_handler.add_action(action.PlaceHolder(action_prototype.step, None))
                     await self.action_handler.update()
                     return
 
             logging.info(f"Received {action_prototype.name}:\n {data_obj}")
-            self.action_handler.add_action(
-                action.NAME_DICT[action_prototype.name](action_prototype.step, data_obj))
+            self.action_handler.add_action(action.NAME_DICT[action_prototype.name](action_prototype.step, data_obj))
 
         await self.action_handler.update()
 

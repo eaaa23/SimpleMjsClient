@@ -1,3 +1,6 @@
+from typing import Self
+
+from .action import GameActionMessage
 from ..api import protocol_pb2 as pb
 from ..api.rpc import FastTest
 from ..const import OperationType
@@ -13,13 +16,16 @@ class AbstractOperation:
         await fasttest.input_operation(pb.ReqSelfOperation(type=self.code))
 
     @classmethod
-    def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState) -> list:
+    def get_possible_operations(cls, data: GameActionMessage, operation: pb.OptionalOperation,
+                                game_state: GameState) -> list[Self]:
         """
         Get all possible operations of this class with a specific ActionXXX protobuf data.
+        :return: list[AbstractOperation]
 
-        Protocol (rules):
+        Protocol (rules) of:
         1. Return value matches type list[Self], and it's never an empty list.
-        2. If the operation have the `cancel operation` option, it will appear at the last item of return value (retval[-1]).
+        2. If any operation has the `cancel_operation` attribute and cancel_operation=True,
+            it will appear at the last item of return value (retval[-1]).
         """
         return [cls()]
 
@@ -64,7 +70,8 @@ class AbstractCallOperation(AbstractCancellableOperation):
                                                                  cancel_operation=self.cancel_operation))
 
     @classmethod
-    def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
+    def get_possible_operations(cls, data: GameActionMessage, operation: pb.OptionalOperation,
+                                game_state: GameState) -> list[Self]:
         tile = data.tile if hasattr(data, "tile") else ""
         retval = [cls(tile, combination.split("|"), index) for index, combination in enumerate(operation.combination)]
         if not cls.is_self_operation:
@@ -98,7 +105,8 @@ class BaBei(AbstractPlayTile):
     code = OperationType.BABEI
 
     @classmethod
-    def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
+    def get_possible_operations(cls, data: GameActionMessage, operation: pb.OptionalOperation,
+                                game_state: GameState) -> list[Self]:
         retval = []
         if game_state.my_hand[-1] == '4z':
             retval.append(cls("", True))
@@ -111,7 +119,8 @@ class PlayTile(AbstractPlayTile):
     code = OperationType.PLAY_TILE
 
     @classmethod
-    def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
+    def get_possible_operations(cls, data: GameActionMessage, operation: pb.OptionalOperation,
+                                game_state: GameState) -> list[Self]:
         # When operation is PlayTile, operation.combination means tiles unable to play due to the "Kuikae" rule
         # "Kuikae" rule: for example, chi 5s with 34s then play 2s is forbidden.
         # In this case, 2s is in operation.combination, so it should not show up in return value.
@@ -124,7 +133,8 @@ class Liqi(AbstractPlayTile):
     code = OperationType.LIQI
 
     @classmethod
-    def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
+    def get_possible_operations(cls, data: GameActionMessage, operation: pb.OptionalOperation,
+                                game_state: GameState) -> list[Self]:
         # When operation is Liqi, operation.combination contains `almost` all possible options that allows you to riichi
         # However, see How weird operation.combination behaves:
         # 1. your hand is 0567m23p23456799s, cut 0m or 5m riichi: operation.combination only have 5m
@@ -161,7 +171,8 @@ class Ron(AbstractCallOperation):
     code = OperationType.RON
 
     @classmethod
-    def get_possible_operations(cls, data, operation: pb.OptionalOperation, game_state: GameState):
+    def get_possible_operations(cls, data: GameActionMessage, operation: pb.OptionalOperation,
+                                game_state: GameState) -> list[Self]:
         retval = [cls("", [], 0), cls("", [], 0, cancel_operation=True)]
         return retval
 

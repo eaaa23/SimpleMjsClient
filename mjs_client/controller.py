@@ -15,7 +15,7 @@ class UpdateEvent:
     pass
 
 
-def _mirror(client_method):
+def _mirror(client_method: Callable):
     def retval(f):
         def func(self, *args, **kwargs):
             self._put_queue_upload((partial(client_method, self.client), args, kwargs))

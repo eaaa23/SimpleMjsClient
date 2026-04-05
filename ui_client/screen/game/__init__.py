@@ -20,19 +20,19 @@ from .tile_group import CallSelectionGroup, HandTileGroup, DiscardTileGroup, Dor
 
 class Liqibang:
     def __init__(self, canvas: tk.Canvas, center: tuple[int, int], size: tuple[int, int], radius: int, rotation: int):
-        self.canvas = canvas
-        self.center = center
-        self.rotation = rotation
-        self.size = ROTATION_MATRICES[rotation](*size)
+        self.canvas: tk.Canvas = canvas
+        self.center: tuple[int, int] = center
+        self.rotation: int = rotation
+        self.size: tuple[int, int] = ROTATION_MATRICES[rotation](*size)
 
         xc, yc = center
         dx, dy = self.size[0] // 2, self.size[1] // 2
         self.rect: tuple[int, int, int, int] = (xc - dx, yc - dy, xc + dx, yc + dy)
         self.circle_rect: tuple[int, int, int, int] = (xc - radius, yc - radius, xc + radius, yc + radius)
 
-        self.rect_id = 0
-        self.circle_id = 0
-        self.created = False
+        self.rect_id: int = 0
+        self.circle_id: int = 0
+        self.created: bool = False
 
     def draw(self, draw: bool):
         if draw and not self.created:
@@ -47,8 +47,8 @@ class Liqibang:
 
 class CallSelectionSubframe:
     def __init__(self, call_selection_group: CallSelectionGroup, rect_size: tuple[int, int]):
-        self.group = call_selection_group
-        self.canvas = self.group.canvas
+        self.group: CallSelectionGroup = call_selection_group
+        self.canvas: tk.Canvas = self.group.canvas
         self.rect: tuple[int, int, int, int] = (self.group.origin[0],
                                                 self.group.origin[1],
                                                 self.group.origin[0] + rect_size[0],

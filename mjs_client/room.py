@@ -1,4 +1,4 @@
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from typing import Callable
 
 from sortedcontainers import SortedList
@@ -10,12 +10,12 @@ from .exceptions import CreateRoomError, AddBotError, ClientError, StartRoomErro
 from .rule import DetailRule, mode_int_is_east
 
 
+@dataclass
 class Seat:
-    def __init__(self, account_id: int, nickname: str, ready: bool, is_robot: bool = False):
-        self.account_id = account_id
-        self.nickname = nickname
-        self.ready = ready or is_robot
-        self.is_robot = is_robot
+    account_id: int
+    nickname: str
+    ready: bool
+    is_robot: bool = False
 
 
 class Room:

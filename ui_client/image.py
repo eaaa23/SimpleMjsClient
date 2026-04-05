@@ -1,8 +1,29 @@
 import os
 import tkinter as tk
-from typing import Callable
+from typing import Callable, Literal
 
 from PIL import Image, ImageTk
+
+
+"""
+`rotation` show up multiple times in this file. 
+
+rotation: int
+Represent the times of counterclockwise rotation of `facing direction`
+
+For example: if rotation=0 means facing north:
+rotation=1 -> facing west
+rotation=2 -> facing south
+rotation=3 -> facing east
+
+Note that `facing direction` differs from the wind position of player.
+A player sitting in the north faces south.
+
+In image editing, rotation=0 represents the original state of an image.
+rotation=1 -> PIL.Image.ROTATE_90
+rotation=2 -> PIL.Image.ROTATE_180
+rotation=3 -> PIL.Image.ROTATE_270
+"""
 
 
 class _Image:
@@ -54,9 +75,12 @@ ROTATION_MATRICES: list[Callable[[int, int], tuple[int, int]]] = [
     lambda i, j: (-j, i)
 ]
 
-ANCHOR = [tk.NW, tk.SW, tk.SE, tk.NE]
+type Anchor = Literal['nw', 'sw', 'se', 'ne']
+
+ANCHOR: list[Anchor] = [tk.NW, tk.SW, tk.SE, tk.NE]
 
 
-def abs_anchor(rotation, rel_anchor):
-    """Get absolute anchor"""
+def abs_anchor(rotation: int, rel_anchor: Anchor) -> Anchor:
+    """Get the absolute anchor from relative anchor and rotation.
+    """
     return ANCHOR[(ANCHOR.index(rel_anchor) + rotation) % 4]

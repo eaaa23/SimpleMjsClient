@@ -1,3 +1,7 @@
+from typing import Union, Sequence, cast
+
+from google.protobuf.message import Message
+
 from ..api import protocol_pb2 as pb
 from ..const import AnGangAddGangType, CPGType
 from ..exceptions import GameError
@@ -7,13 +11,17 @@ from .tiles_util import tile_sort_key
 from .gamestate import GameState, Discard, Open, OpenType, RoundResult, WinInfo
 
 
+type GameActionMessage = Union[pb.ActionMJStart, pb.ActionNewRound, pb.ActionDealTile, pb.ActionDiscardTile,
+                               pb.ActionChiPengGang, pb.ActionAnGangAddGang, pb.ActionBaBei,
+                               pb.ActionHule, pb.ActionLiuJu, pb.ActionNoTile]
+
+
 class AbstractGameAction:
     data_class: type(object)
-    operation_delay: float = 0.0
 
-    def __init__(self, step, data):
-        self.step = step
-        self.data = data
+    def __init__(self, step: int, data: Message | None):
+        self.step: int = step
+        self.data: GameActionMessage | None = data
 
     def __lt__(self, other):
         return self.step < other.step
@@ -40,7 +48,6 @@ class ActionMJStart(AbstractGameAction):
 
 class ActionNewRound(AbstractGameAction):
     data_class = pb.ActionNewRound
-    operation_delay = 3.0
 
     def update(self, game_state: GameState) -> OperationPhase:
         game_state.current_chang = self.data.chang
@@ -50,7 +57,9 @@ class ActionNewRound(AbstractGameAction):
         game_state.my_hand = sorted(self.data.tiles, key=tile_sort_key)
         game_state.doras = list(self.data.doras)
         for i, score in enumerate(self.data.scores):
-            game_state.scores[i] = score
+            # I have to write "type: ignore" here
+            # Because pb.ActionNewRound and pb.ActionNoTiles both has property name "scores"
+            game_state.scores[i] = score    # type: ignore
         game_state.liqibang = self.data.liqibang
         game_state.left_tile_count = self.data.left_tile_count
         game_state.me_just_dealt_tile = len(game_state.my_hand) == 14
@@ -207,10 +216,11 @@ class ActionNoTile(RoundEnder):
     data_class = pb.ActionNoTile
 
     def result(self, game_state: GameState) -> RoundResult:
-        shown_hands = {i: (player.hand, game_state.player_opens[i])
+        shown_hands = {i: (list(player.hand), game_state.player_opens[i])
                        for i, player in enumerate(self.data.players) if player.tingpai}
         if self.data.scores:
-            delta_scores = list(self.data.scores[0].delta_scores)
+            # I have to write "type: ignore" here - Same reason, see ActionNewRound
+            delta_scores = list(self.data.scores[0].delta_scores)    # type: ignore
             delta_scores.extend([0] * (game_state.player_count - len(delta_scores)))
         else:
             delta_scores = [0 for i in range(game_state.player_count)]

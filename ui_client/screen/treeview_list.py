@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import tkinter as tk
 from tkinter import ttk
-from typing import TypeVar, Any, Sequence, Callable, Literal, Iterable
+from typing import Any, Sequence, Callable, Literal, Iterable
 
 
 @dataclass
