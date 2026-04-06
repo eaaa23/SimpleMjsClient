@@ -110,10 +110,11 @@ class HandTileGroup(AbstractTileGroup):
                 self.hand_tiles = self.game_state.my_hand
                 return
         elif self.game_state.phase == GamePhase.BETWEEN_ROUNDS:
-            if self.seat in self.game_state.round_result.shown_hands:
-                self.last_tile_do_spacing = True
-                self.hand_tiles = self.game_state.round_result.shown_hands[self.seat][0]
-                return
+            for shown_hand in self.game_state.round_result.shown_hands:
+                if self.seat == shown_hand.seat:
+                    self.last_tile_do_spacing = True
+                    self.hand_tiles = shown_hand.hand_tiles
+                    return
         self.hand_tiles = ["00"] * self.game_state.player_hand_size[self.seat]
 
     def grid_tile(self) -> list[list[TileInfo]]:

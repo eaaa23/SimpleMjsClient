@@ -8,7 +8,7 @@ from ..exceptions import GameError
 
 from .phases import OperationPhase
 from .tiles_util import tile_sort_key
-from .gamestate import GameState, Discard, Open, OpenType, RoundResult, WinInfo, OpenDirection, LiqiState
+from .gamestate import GameState, Discard, Open, OpenType, RoundResult, WinInfo, OpenDirection, LiqiState, ShownHand
 
 type GameActionMessage = Union[pb.ActionMJStart, pb.ActionNewRound, pb.ActionDealTile, pb.ActionDiscardTile,
                                pb.ActionChiPengGang, pb.ActionAnGangAddGang, pb.ActionBaBei,
@@ -194,8 +194,9 @@ class ActionHule(RoundEnder):
 
     def result(self, game_state: GameState) -> RoundResult:
         return RoundResult(
-            shown_hands={hule.seat: (list(hule.hand) + [hule.hu_tile], game_state.player_opens[hule.seat])
-                         for hule in self.data.hules},
+            shown_hands=[ShownHand(seat=hule.seat, hand_tiles=list(hule.hand) + [hule.hu_tile],
+                                   opens=game_state.player_opens[hule.seat])
+                         for hule in self.data.hules],
             delta_scores=list(self.data.delta_scores),
             win=[WinInfo(seat=hule.seat,
                          yakus={fan.id: fan.val for fan in hule.fans},
@@ -210,21 +211,24 @@ class ActionLiuJu(RoundEnder):
     data_class = pb.ActionLiuJu
 
     def result(self, game_state: GameState) -> RoundResult:
-        return RoundResult(shown_hands={}, delta_scores=[0 for i in range(game_state.player_count)], win=[])
+        # TODO: support shown_hands for this
+        return RoundResult(delta_scores=[0 for i in range(game_state.player_count)], win=[])
 
 
 class ActionNoTile(RoundEnder):
     data_class = pb.ActionNoTile
 
     def result(self, game_state: GameState) -> RoundResult:
-        shown_hands = {i: (list(player.hand), game_state.player_opens[i])
-                       for i, player in enumerate(self.data.players) if player.tingpai}
+        shown_hands = [ShownHand(seat=i, hand_tiles=list(player.hand), opens=game_state.player_opens[i])
+                       for i, player in enumerate(self.data.players) if player.tingpai]
+
         if self.data.scores:
             # I have to write "type: ignore" here - Same reason, see ActionNewRound
             delta_scores = list(self.data.scores[0].delta_scores)    # type: ignore
             delta_scores.extend([0] * (game_state.player_count - len(delta_scores)))
         else:
             delta_scores = [0 for i in range(game_state.player_count)]
+
         return RoundResult(shown_hands=shown_hands, delta_scores=delta_scores, win=[])
 
 

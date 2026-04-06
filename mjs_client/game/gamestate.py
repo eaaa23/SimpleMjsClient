@@ -56,6 +56,13 @@ class RoundResultType(IntEnum):
 
 
 @dataclass
+class ShownHand:
+    seat: int
+    hand_tiles: list[str] = field(default_factory=list)
+    opens: list[Open] = field(default_factory=list)
+
+
+@dataclass
 class WinInfo:
     seat: int
 
@@ -73,7 +80,7 @@ class WinInfo:
 
 @dataclass
 class RoundResult:
-    shown_hands: dict[int, tuple[list[str], list[Open]]] = field(default_factory=dict)
+    shown_hands: list[ShownHand] = field(default_factory=list)
     delta_scores: list[int] = field(default_factory=lambda: [0 for i in range(4)])
     win: list[WinInfo] = field(default_factory=list)
 
