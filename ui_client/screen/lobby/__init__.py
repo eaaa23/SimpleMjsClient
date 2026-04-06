@@ -2,7 +2,7 @@ from functools import partial
 import tkinter as tk
 
 from mjs_client.client import ClientPhase
-from mjs_client.const import ModeInt
+from mjs_client.const import ModeInt, PlayerCount
 from mjs_client.level import get_match_level_dict
 
 from ...language import tr
@@ -18,7 +18,7 @@ class LobbyLevelFrame:
     """
     This is not a screen, only a frame in LobbyScreen
     """
-    def __init__(self, parent, ui, match_level: int, available_player_count: set[int]):
+    def __init__(self, parent, ui, match_level: int, available_player_count: set[PlayerCount]):
         self.parent = parent
         self.ui = ui
         self.match_level = match_level
@@ -101,7 +101,7 @@ class LobbyScreen(AbstractScreen):
 
         self.update_text()
 
-    def get_account_info_text(self, player_count: int) -> str:
+    def get_account_info_text(self, player_count: PlayerCount) -> str:
         level = self.client.account_level[player_count]
         return (tr("game.player_count.{}".format(player_count)) +
                 tr("game.level.{}".format(level.level)) +

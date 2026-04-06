@@ -8,8 +8,7 @@ from ..exceptions import GameError
 
 from .phases import OperationPhase
 from .tiles_util import tile_sort_key
-from .gamestate import GameState, Discard, Open, OpenType, RoundResult, WinInfo
-
+from .gamestate import GameState, Discard, Open, OpenType, RoundResult, WinInfo, OpenDirection, LiqiState
 
 type GameActionMessage = Union[pb.ActionMJStart, pb.ActionNewRound, pb.ActionDealTile, pb.ActionDiscardTile,
                                pb.ActionChiPengGang, pb.ActionAnGangAddGang, pb.ActionBaBei,
@@ -99,9 +98,9 @@ class ActionDiscardTile(AbstractGameAction):
         game_state.player_discards[self.data.seat].append(game_state.last_discard)
         game_state.player_hand_size[self.data.seat] -= 1
         if self.data.is_wliqi:
-            game_state.player_liqis[self.data.seat] = 2
+            game_state.player_liqis[self.data.seat] = LiqiState.DOUBLE_LIQI
         elif self.data.is_liqi:
-            game_state.player_liqis[self.data.seat] = 1
+            game_state.player_liqis[self.data.seat] = LiqiState.LIQI
         if self.data.doras:
             game_state.doras = list(self.data.doras)
         if self.data.seat == game_state.my_seat:
@@ -124,8 +123,10 @@ class ActionChiPengGang(GameActionWithLiqiSuccess):
         tiles = list(self.data.tiles)
         tile_from_other = tiles[i]
         del tiles[i]
-        game_state.player_opens[self.data.seat].append(Open(type=self.data.type, tiles_self=tiles,
-                                                            direction=direction, tile_from_other=tile_from_other))
+        game_state.player_opens[self.data.seat].append(Open(type=OpenType(self.data.type),
+                                                            tiles_self=tiles,
+                                                            direction=OpenDirection(direction),
+                                                            tile_from_other=tile_from_other))
         game_state.player_hand_size[self.data.seat] -= (3 if self.data.type == CPGType.MINGGANG else 2)
         game_state.last_discard.called = True
         if self.data.seat == game_state.my_seat:

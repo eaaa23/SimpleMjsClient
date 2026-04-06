@@ -7,6 +7,7 @@ from google.protobuf.message import DecodeError
 from ..api.base import MSRPCChannel
 from ..api.rpc import FastTest
 from ..api import protocol_pb2 as pb
+from ..const import PlayerCount
 from ..rule import DetailRule
 
 from . import action
@@ -17,8 +18,8 @@ from .phases import GamePhase
 
 
 class Game:
-    def __init__(self, client, connect_token: str, game_uuid: str, player_count: int, is_east: bool, rule: DetailRule,
-                 from_room: bool):
+    def __init__(self, client, connect_token: str, game_uuid: str, player_count: PlayerCount, is_east: bool,
+                 rule: DetailRule, from_room: bool):
         self.client = client
         self.connect_token = connect_token
         self.game_uuid = game_uuid

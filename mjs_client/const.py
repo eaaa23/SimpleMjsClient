@@ -1,7 +1,11 @@
 from enum import IntEnum
+from typing import Literal
 
 MS_HOST = "https://game.maj-soul.com"
 ENDPOINT = "wss://route-{}.maj-soul.com/"
+
+
+type PlayerCount = Literal[3, 4]
 
 
 """
@@ -84,8 +88,7 @@ class LevelMain(IntEnum):
     CELESTIAL = 7
 
 
-# key: (level_m, mode_int, is_east)
-MATCH_SID: dict[int, dict[int, int]] = {
+MATCH_SID: dict[LevelMain, dict[ModeInt, MatchSid]] = {
     LevelMain.NOVICE: {
         ModeInt.MODE_4E: MatchSid.BRONZE_4E,
         ModeInt.MODE_4S: MatchSid.BRONZE_4S,
@@ -119,7 +122,7 @@ MATCH_SID: dict[int, dict[int, int]] = {
 }
 
 
-LEVEL_MAX_SCORE: dict[int, tuple[int, ...]] = {
+LEVEL_MAX_SCORE: dict[LevelMain, tuple[int, ...]] = {
     LevelMain.NOVICE: (20, 80, 200),
     LevelMain.ADEPT: (600, 800, 1000),
     LevelMain.EXPERT: (1200, 1400, 2000),

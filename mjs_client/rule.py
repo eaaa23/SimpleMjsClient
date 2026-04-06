@@ -1,6 +1,6 @@
 from dataclasses import dataclass, fields
 
-from .const import ModeInt
+from .const import ModeInt, PlayerCount
 
 
 @dataclass
@@ -21,7 +21,7 @@ class DetailRule:
         return DetailRule(**{field.name: getattr(buf, field.name) for field in fields(DetailRule)})
 
 
-def get_default_rule(player_count: int) -> DetailRule:
+def get_default_rule(player_count: PlayerCount) -> DetailRule:
     if player_count == 4:
         return DetailRule(init_point=25000, fandian=30000, dora_count=3)
     elif player_count == 3:
@@ -29,7 +29,7 @@ def get_default_rule(player_count: int) -> DetailRule:
     raise ValueError("player_count must be 3 or 4")
 
 
-def get_mode_int(player_count: int, is_east: bool) -> int:
+def get_mode_int(player_count: PlayerCount, is_east: bool) -> int:
     if player_count == 4:
         return ModeInt.MODE_4E if is_east else ModeInt.MODE_4S
     elif player_count == 3:

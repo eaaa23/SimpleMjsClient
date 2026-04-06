@@ -5,7 +5,7 @@ from sortedcontainers import SortedList
 
 from .accident import RoomKicked
 from .api import protocol_pb2 as pb
-from .const import MODE_INT
+from .const import MODE_INT, PlayerCount
 from .exceptions import CreateRoomError, AddBotError, ClientError, StartRoomError
 from .rule import DetailRule, mode_int_is_east
 
@@ -22,7 +22,7 @@ class Seat:
 
 
 class Room:
-    def __init__(self, client, *, player_count: int = 0, is_east: bool = None, detail_rule: DetailRule = None,
+    def __init__(self, client, *, player_count: PlayerCount = 4, is_east: bool = None, detail_rule: DetailRule = None,
                  join_room_protobuf: pb.Room = None):
         self.client = client
 
@@ -44,7 +44,7 @@ class Room:
             assert player_count in (3, 4)
             assert is_east is not None
             assert detail_rule is not None
-            self.player_count: int = player_count
+            self.player_count: PlayerCount = player_count
             self.seats: list[Seat] = [Seat(0, "", False) for i in range(self.player_count)]
             self.is_east: bool = is_east
             self.detail_rule: DetailRule = detail_rule

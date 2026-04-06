@@ -3,6 +3,7 @@ import logging
 from sortedcontainers import SortedList
 
 from ..api import protocol_pb2 as pb
+from ..const import PlayerCount
 
 from .action import AbstractGameAction, RoundEnder
 from .gamestate import GameState, EndResult
@@ -11,7 +12,7 @@ from .phases import GamePhase
 
 
 class GameActionHandler:
-    def __init__(self, game, player_count: int, is_east: bool, my_seat: int):
+    def __init__(self, game, player_count: PlayerCount, is_east: bool, my_seat: int):
         self.game = game
         self.action_queue: SortedList[AbstractGameAction] = SortedList()
         self.game_state: GameState = GameState(player_count, is_east, my_seat)

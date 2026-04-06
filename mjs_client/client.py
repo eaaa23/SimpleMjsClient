@@ -12,8 +12,8 @@ from .accident import Accident
 from .api import protocol_pb2 as pb
 from .api.base import MSRPCChannel, ONCE_HOOK
 from .api.rpc import Lobby
-from .const import MS_HOST, ENDPOINT, MATCH_SID, MODE_INT
-from .exceptions import LoginError, StartUnifiedMatchError, JoinRoomError, PhaseInvalid
+from .const import MS_HOST, ENDPOINT, MATCH_SID, MODE_INT, LevelMain, PlayerCount
+from .exceptions import LoginError, JoinRoomError, PhaseInvalid
 from .game.game import Game
 from .game.operation import AbstractOperation
 from .level import Level
@@ -56,11 +56,11 @@ class MahjongSoulClient:
         self.channel: MSRPCChannel | None = None
         self.account_id: int = 0
         self.account_name: str = ""
-        self.account_level: dict[int, Level] = {}
+        self.account_level: dict[PlayerCount, Level] = {}
         self.game: Game | None = None
         self.room: Room | None = None
 
-    def _set_phase(self, phase: int):
+    def _set_phase(self, phase: ClientPhase):
         self._events[self.phase].clear()
         self._events[phase].set()
         self.phase = phase
@@ -113,14 +113,14 @@ class MahjongSoulClient:
 
         self._set_phase(ClientPhase.LOBBY)
 
-    async def _start_game(self, connect_token: str, game_uuid: str, player_count: int, is_east: bool,
+    async def _start_game(self, connect_token: str, game_uuid: str, player_count: PlayerCount, is_east: bool,
                           detail_rule: DetailRule, from_room: bool):
         self.game = Game(self, connect_token, game_uuid, player_count, is_east, detail_rule, from_room)
         await self.game.start()
         self._set_phase(ClientPhase.INGAME)
 
     @limit(ClientPhase.LOBBY)
-    async def start_unified_match(self, level: int, player_count: int, is_east: bool):
+    async def start_unified_match(self, level: LevelMain, player_count: PlayerCount, is_east: bool):
         match_sid = MATCH_SID[level][MODE_INT[(player_count, is_east)]]
         await self.lobby.start_unified_match(
             pb.ReqStartUnifiedMatch(match_sid=f"1:{match_sid}", client_version_string=f"web-{self.version_to_force}"))
@@ -156,7 +156,7 @@ class MahjongSoulClient:
             self._set_phase(ClientPhase.LOBBY)
 
     @limit(ClientPhase.LOBBY)
-    async def create_room(self, player_count: int, is_east: bool, detail_rule: DetailRule = None):
+    async def create_room(self, player_count: PlayerCount, is_east: bool, detail_rule: DetailRule = None):
         if player_count not in (3, 4):
             raise ValueError("player_count must be 3 or 4")
         if detail_rule is None:

@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from enum import IntEnum
 
+from ..const import PlayerCount
+
 from .phases import GamePhase
 
 
@@ -26,9 +28,9 @@ class OpenDirection(IntEnum):
 
 @dataclass
 class Open:
-    type: int
+    type: OpenType
     tiles_self: list[str]
-    direction: int = OpenDirection.NONE
+    direction: OpenDirection = OpenDirection.NONE
     tile_from_other: str = ""
 
 
@@ -56,8 +58,13 @@ class RoundResultType(IntEnum):
 @dataclass
 class WinInfo:
     seat: int
+
+    # key: yaku id. See yaku id list in:
+    # https://wikiwiki.jp/majsoul-api/%E5%AE%9A%E6%95%B0%E4%B8%80%E8%A6%A7%E3%81%AB%E3%82%83#e1bf753c)
+    # value: how many `fan` this yaku values.
     yakus: dict[int, int]
-    fan: int
+
+    fan: int  # total `fan` count
     fu: int
     score: int
     tsumo: bool
@@ -71,9 +78,15 @@ class RoundResult:
     win: list[WinInfo] = field(default_factory=list)
 
 
+class LiqiState(IntEnum):
+    NONE = 0
+    LIQI = 1
+    DOUBLE_LIQI = 2
+
+
 @dataclass
 class GameState:
-    player_count: int
+    player_count: PlayerCount
     is_east: bool
     my_seat: int
     current_chang: int = 0
@@ -92,7 +105,7 @@ class GameState:
     player_discards: list[list[Discard]] = field(default_factory=lambda: [[] for i in range(4)])
     player_opens: list[list[Open]] = field(default_factory=lambda: [[] for i in range(4)])
     player_peis: list[list[bool]] = field(default_factory=lambda: [[] for i in range(4)])
-    player_liqis: list[int] = field(default_factory=lambda: [0 for i in range(4)])
+    player_liqis: list[LiqiState] = field(default_factory=lambda: [LiqiState.NONE for i in range(4)])
     round_result: RoundResult = field(default_factory=RoundResult)
 
     ended: bool = False
@@ -103,4 +116,4 @@ class GameState:
         self.player_discards: list[list[Discard]] = [[] for i in range(4)]
         self.player_opens: list[list[Open]] = [[] for i in range(4)]
         self.player_peis: list[list[bool]] = [[] for i in range(4)]
-        self.player_liqis = [0] * 4
+        self.player_liqis = [LiqiState.NONE] * 4
