@@ -1,10 +1,10 @@
 from typing import Self
 
-from .action import GameActionMessage
 from ..api import protocol_pb2 as pb
 from ..api.rpc import FastTest
 from ..const import OperationType
 
+from .action import GameActionMessage
 from .gamestate import GameState
 from .tiles_util import turn0to5
 

@@ -93,7 +93,8 @@ class GameScreen(AbstractScreen):
                                      outline="black")
 
         self.operation_button_group = OperationButtonGroup(self, (648, 732), tk.SE, (64, 25))
-        self.call_selection_subframe = CallSelectionSubframe(CallSelectionGroup(self.canvas, self.game_state, (200, 675), 0, 0.4,
+        self.call_selection_subframe = CallSelectionSubframe(CallSelectionGroup(self.canvas, self.game_state,
+                                                                                (200, 675), 0, 0.4,
                                                                                 self.tile_bind_func),
                                                              (320, 50))
 
@@ -191,8 +192,9 @@ class GameScreen(AbstractScreen):
             self.hand_tile_groups[rotation].redraw()
             self.discard_groups[rotation].redraw()
             self.update_label_text_and_liqi(rotation)
-        self.label_chang.config(text=tr("game.round.{}".format(self.game_state.current_chang)).format(self.game_state.current_ju+1, self.game_state.current_benchang) + '\n' +
-                                tr("game.remain").format(self.game_state.left_tile_count))
+        self.label_chang.config(text=tr("game.round.{}".format(self.game_state.current_chang)).
+                                format(self.game_state.current_ju+1, self.game_state.current_benchang)
+                                + '\n' + tr("game.remain").format(self.game_state.left_tile_count))
         self.liqibang_changgong.draw(True)
         self.label_changgong.config(text="x {}".format(self.game_state.liqibang))
         self.dora_group.redraw()

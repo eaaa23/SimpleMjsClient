@@ -1,4 +1,4 @@
-from typing import Union, Sequence, cast
+from typing import Union
 
 from google.protobuf.message import Message
 

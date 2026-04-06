@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
-from typing import Sequence, Callable
+from typing import Sequence, Callable, cast
 
-from mjs_client.const import TIME_FIXED_ADD
+from mjs_client.const import TIME_FIXED_ADD, PlayerCount
 from mjs_client.rule import is_valid_point, get_default_rule, DetailRule
 
 from ...language import tr
@@ -114,7 +114,7 @@ class CreateRoomScreen(AbstractScreen):
         if init_point == -1 or fandian == -1:
             messagebox.showerror(tr("error.point.title"), tr("error.point.text"))
             return
-        player_count = self.group_player_count.get()
+        player_count: PlayerCount = cast(PlayerCount, self.group_player_count.get())
         is_east = self.group_is_east.get()
         dora_count = get_default_rule(player_count).dora_count
         time_fixed, time_add = TIME_FIXED_ADD[self.group_time_index.get()]

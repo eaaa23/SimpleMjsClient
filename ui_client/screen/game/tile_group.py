@@ -7,7 +7,7 @@ from typing import Callable, Any
 from PIL import ImageTk
 
 from mjs_client.const import OperationType
-from mjs_client.game.operation import AbstractOperation, PlayTile, Liqi, AbstractCallOperation
+from mjs_client.game.operation import AbstractOperation, PlayTile, Liqi, AbstractCallOperation, AbstractPlayTile
 from mjs_client.game.operation_container import OperationContainer
 from mjs_client.game.phases import GamePhase
 from mjs_client.game.gamestate import GameState, Open, OpenType, Discard
@@ -76,7 +76,8 @@ class AbstractTileGroup:
                     self.last_image_id.append(self.canvas.create_image(self.origin[0] + rel_x, self.origin[1] + rel_y,
                                                                        image=image, anchor=self._anchor))
                     if info.bind_operation is not None and self.bind_function is not None:
-                        self.canvas.tag_bind(self.last_image_id[-1], "<Button-1>", partial(self.bind_function, info.bind_operation))
+                        self.canvas.tag_bind(self.last_image_id[-1], "<Button-1>",
+                                             partial(self.bind_function, info.bind_operation))
                 if not info.addgang:
                     i += i_increment
 
@@ -122,8 +123,10 @@ class HandTileGroup(AbstractTileGroup):
         if len(self.hand_tiles) % 3 == 2:
             if self.last_tile_do_spacing:
                 retval_0.insert(-1, TileInfo(tile="", spacing=0.5))
-                if retval_0[-1].bind_operation is not None:
-                    retval_0[-1].bind_operation.is_moqie = True
+
+                last_tile_bind_op: AbstractPlayTile | None = retval_0[-1].bind_operation
+                if last_tile_bind_op is not None:
+                    last_tile_bind_op.is_moqie = True
             else:
                 retval_0.append(TileInfo(tile="", spacing=0.5))
         else:  # == 1:
@@ -144,7 +147,8 @@ class HandTileGroup(AbstractTileGroup):
                     insert_idx = (len(tiles_self), 1, 0)[open_.direction-1]
                     new_tile_infos.insert(insert_idx, TileInfo(tile=open_.tile_from_other, rel_rotation=1))
                     if open_.type == OpenType.ADDGANG:
-                        new_tile_infos.insert(insert_idx+1, TileInfo(tile=open_.tiles_self[-1], rel_rotation=1, addgang=True))
+                        new_tile_infos.insert(insert_idx+1, TileInfo(tile=open_.tiles_self[-1], rel_rotation=1,
+                                                                     addgang=True))
                     retval_0.extend(new_tile_infos)
         return [retval_0]
 
@@ -159,13 +163,6 @@ class HandTileGroup(AbstractTileGroup):
                 alpha = 0.3
             return TileInfo(tile=tile, bind_operation=Liqi(tile=tile, is_moqie=False), alpha=alpha)
         return TileInfo(tile=tile, bind_operation=PlayTile(tile=tile, is_moqie=False))
-
-
-class TestHandTileGroup(HandTileGroup):
-    """Debugging only"""
-    def update_state(self):
-        self.hand_tiles = ["0s"]
-        self.opens = [Open(type=OpenType.ADDGANG, tiles_self=["5s", "5s", "0s"], direction=1, tile_from_other="5s") for i in range(4)]
 
 
 class DiscardTileGroup(AbstractTileGroup):

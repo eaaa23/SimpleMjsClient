@@ -1,8 +1,7 @@
 import logging
 from typing import Generator, Iterable, Union, cast
 
-import mjs_client.api.protocol_pb2 as pb
-
+from ..api import protocol_pb2 as pb
 from ..const import OperationType
 
 from .gamestate import GameState
