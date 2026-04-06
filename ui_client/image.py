@@ -43,21 +43,24 @@ class _ImageCacheKey:
 class _Image:
     def __init__(self, path: str):
         self.path = path
-        self.src: Image.Image | None = None
+        self.src: Image.Image = Image.open(self.path)
+
+        # cache src.width and src.height because they are slow
+        self.src_width = self.src.width
+        self.src_height = self.src.height
+
         self.images: dict[_ImageCacheKey, list[ImageTk.PhotoImage]] = {}
 
     def get(self, rotation: int, scale: float, alpha: float) -> ImageTk.PhotoImage:
-        if self.src is None:
-            self.src = Image.open(self.path)
         new_width = round(self.src.width * scale)
         new_height = round(self.src.height * scale)
-        key = _ImageCacheKey(new_width, new_height, alpha)
+        alpha_int = round(256 * alpha)
+        key = _ImageCacheKey(new_width, new_height, alpha_int)
         if key not in self.images:
             src_adjusted = self.src.resize((new_width, new_height), Image.Resampling.LANCZOS)
             if alpha != 1.0:
                 src_adjusted = src_adjusted.convert("RGBA")
-                a = round(256 * alpha)
-                src_adjusted.putdata([(r, g, b, a) for r, g, b, _ in src_adjusted.getdata()])
+                src_adjusted.putdata([(r, g, b, alpha_int) for r, g, b, _ in src_adjusted.getdata()])
 
             images = [src_adjusted,
                       src_adjusted.transpose(Image.ROTATE_90),
