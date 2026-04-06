@@ -1,9 +1,9 @@
-from enum import IntEnum
 from dataclasses import dataclass, field
+from enum import IntEnum
+
+from ..const import PlayerCount
 
 from .phases import GamePhase
-from .tiles_util import tile_cmp_key, TILES_TO_INDEX34, SANMA_INVALID_TILES
-
 
 
 class OpenType(IntEnum):
@@ -18,6 +18,7 @@ class OpenType(IntEnum):
     ANGANG = 3
     ADDGANG = 4
 
+
 class OpenDirection(IntEnum):
     NONE = 0
     NEXT = 1
@@ -27,10 +28,11 @@ class OpenDirection(IntEnum):
 
 @dataclass
 class Open:
-    type: int
+    type: OpenType
     tiles_self: list[str]
-    direction: int = OpenDirection.NONE
+    direction: OpenDirection = OpenDirection.NONE
     tile_from_other: str = ""
+
 
 @dataclass
 class Discard:
@@ -39,6 +41,7 @@ class Discard:
     called: bool
     is_liqi: bool
 
+
 @dataclass
 class EndResult:
     seat: int = 0
@@ -46,30 +49,51 @@ class EndResult:
     score: float = 0.0
     pt: int = 0
 
+
 class RoundResultType(IntEnum):
     HULE = 0
     LIUJU = 1
 
+
+@dataclass
+class ShownHand:
+    seat: int
+    hand_tiles: list[str] = field(default_factory=list)
+    opens: list[Open] = field(default_factory=list)
+
+
 @dataclass
 class WinInfo:
     seat: int
+
+    # key: yaku id. See yaku id list in:
+    # https://wikiwiki.jp/majsoul-api/%E5%AE%9A%E6%95%B0%E4%B8%80%E8%A6%A7%E3%81%AB%E3%82%83#e1bf753c)
+    # value: how many `fan` this yaku values.
     yakus: dict[int, int]
-    fan: int
+
+    fan: int  # total `fan` count
     fu: int
     score: int
     tsumo: bool
     yakuman: bool = False
 
+
 @dataclass
 class RoundResult:
-    shown_hands: dict[int, tuple[list[str], list[Open]]] = field(default_factory=dict)
+    shown_hands: list[ShownHand] = field(default_factory=list)
     delta_scores: list[int] = field(default_factory=lambda: [0 for i in range(4)])
     win: list[WinInfo] = field(default_factory=list)
 
 
+class LiqiState(IntEnum):
+    NONE = 0
+    LIQI = 1
+    DOUBLE_LIQI = 2
+
+
 @dataclass
 class GameState:
-    player_count: int
+    player_count: PlayerCount
     is_east: bool
     my_seat: int
     current_chang: int = 0
@@ -88,7 +112,7 @@ class GameState:
     player_discards: list[list[Discard]] = field(default_factory=lambda: [[] for i in range(4)])
     player_opens: list[list[Open]] = field(default_factory=lambda: [[] for i in range(4)])
     player_peis: list[list[bool]] = field(default_factory=lambda: [[] for i in range(4)])
-    player_liqis: list[int] = field(default_factory=lambda: [0 for i in range(4)])
+    player_liqis: list[LiqiState] = field(default_factory=lambda: [LiqiState.NONE for i in range(4)])
     round_result: RoundResult = field(default_factory=RoundResult)
 
     ended: bool = False
@@ -99,18 +123,4 @@ class GameState:
         self.player_discards: list[list[Discard]] = [[] for i in range(4)]
         self.player_opens: list[list[Open]] = [[] for i in range(4)]
         self.player_peis: list[list[bool]] = [[] for i in range(4)]
-        self.player_liqis = [0] * 4
-
-    """
-    def __str__(self):
-        retval = f"\nCurrent chang={self.current_chang}, ju={self.current_ju}, ben={self.current_benchang}\n\n"
-        for i in range(self.player_count):
-            retval += f"seat {i}{' (me)' if i == self.my_seat else ''}, liqistate={self.player_liqis[i]}, score={self.scores[i]}\n" \
-                      f"Shepai: {''.join(shepai.tile for shepai in self.player_discards[i])}\n" \
-                      f"Fulu: {' '.join(fulu.to_string(i) for fulu in self.player_opens[i])}    BaBei: {len(self.player_peis[i])}\n"
-            if i == self.my_seat:
-                retval += f'Original hand: {''.join(self.my_hand)}\n'
-                retval += ''.join(sorted(self.my_hand, key=tile_cmp_key)) + "\n"
-            retval += "\n"
-        return retval
-        """
+        self.player_liqis = [LiqiState.NONE] * 4

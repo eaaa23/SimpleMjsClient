@@ -52,6 +52,7 @@ class RoomSeatFrame:
 
 class RoomScreen(AbstractScreen):
     PHASE = ClientPhase.INROOM
+
     def __init__(self, parent, ui):
         super().__init__(parent, ui)
 
@@ -88,7 +89,8 @@ class RoomScreen(AbstractScreen):
             self.button_ready_or_start.config(text=tr("room.button.start"),
                                               state=tk.NORMAL if self.client.room.all_ready() else tk.DISABLED)
         else:
-            self.button_ready_or_start.config(text=tr("room.button.ready_cancel") if self.client.room.me().ready else tr("room.button.ready"))
+            self.button_ready_or_start.config(text=tr("room.button.ready_cancel") if self.client.room.me().ready
+                                              else tr("room.button.ready"))
         for subframe in self.seat_frames:
             subframe.update()
         self.settings_button.update_text()

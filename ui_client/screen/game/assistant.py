@@ -2,19 +2,19 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from .. import AbstractScreen
+from ..settings.button import SettingsButton
+
 from ...autobot import AutoBot, ScriptNotFound, ScriptInstanceInitFail
 from ...config import config, AutoBotInfo, AutoBotItemInfo
 from ...language import tr
 from ...scripts import ScriptClassWrapper
 
-from ..settings.button import SettingsButton
-
 
 class GameAssistantFrame:
-    def __init__(self, parent, screen: AbstractScreen):
-        self.parent = parent
+    def __init__(self, parent: tk.Misc, screen: AbstractScreen):
+        self.parent: tk.Misc = parent
         self.ui = screen.ui
-        self.screen = screen
+        self.screen: AbstractScreen = screen
 
         self.first_row = tk.Frame(self.parent)
         self.first_row.grid(row=0, column=0)

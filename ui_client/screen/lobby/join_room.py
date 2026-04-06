@@ -35,4 +35,3 @@ class JoinRoomScreen(AbstractScreen):
         self.parent.title(tr("lobby.join_room.title"))
         self.label_enter_room_id.config(text=tr("lobby.join_room.id"))
         self.button_join.config(text=tr("lobby.join_room.join"))
-

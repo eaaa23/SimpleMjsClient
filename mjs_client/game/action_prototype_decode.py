@@ -8,4 +8,3 @@ def decode(data: bytes):
         u = (23 ^ len(data)) + 5 * i + _keys[i % _len_keys] & 255
         data[i] ^= u
     return bytes(data)
-

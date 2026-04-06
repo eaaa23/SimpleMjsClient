@@ -1,16 +1,14 @@
+from dataclasses import dataclass
 import tkinter as tk
 from tkinter import ttk
-from typing import TypeVar, Any, Sequence, Callable, Literal, Iterable
-from dataclasses import dataclass
-
-
-T = TypeVar('T')
+from typing import Any, Sequence, Callable, Literal, Iterable
 
 
 @dataclass
 class TreeviewRow:
     iid: str
     item: Any
+
 
 @dataclass
 class TreeviewColumn:
@@ -89,13 +87,10 @@ class TreeviewList:
         if indexes is None:
             indexes = range(len(self.rows))
 
-        if filter_func is None:
-            filter_func = lambda x: True
-
         indexes_to_remove = []
         for idx in indexes:
             row = self.rows[idx]
-            if filter_func(row.item):
+            if filter_func is None or filter_func(row.item):
                 self.treeview.delete(row.iid)
                 indexes_to_remove.append(idx)
 

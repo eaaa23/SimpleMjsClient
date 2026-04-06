@@ -1,17 +1,17 @@
+from functools import partial
 import logging
 import tkinter as tk
 from tkinter import messagebox
-import json
-from functools import partial
 
 from mjs_client.client import MahjongSoulClient
 from mjs_client.controller import ClientController
 from mjs_client.exceptions import MjsError
 
-from .config import Config, get_config, config
-from .screen import AbstractScreen, LoginScreen, MAIN_SCREENS, BlankScreen
-from .language import set_language, tr, TEXT_FOLDER
+from .config import config
+from .language import set_language, tr
+from .screen import AbstractScreen, MAIN_SCREENS, BlankScreen
 from .scripts import PackageScriptManager
+
 
 class UI:
     def __init__(self):
@@ -73,5 +73,3 @@ class UI:
             error_text += tr("error.error_code").format(e.args[0])
         logging.error(f"{type(e).__name__} {e}")
         messagebox.showerror(error_title, error_text)
-
-

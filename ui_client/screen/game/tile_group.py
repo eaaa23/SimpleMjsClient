@@ -1,16 +1,16 @@
-import tkinter as tk
 from abc import abstractmethod
 from dataclasses import dataclass
 from functools import partial
+import tkinter as tk
 from typing import Callable, Any
 
 from PIL import ImageTk
 
 from mjs_client.const import OperationType
+from mjs_client.game.operation import AbstractOperation, PlayTile, Liqi, AbstractCallOperation, AbstractPlayTile
 from mjs_client.game.operation_container import OperationContainer
 from mjs_client.game.phases import GamePhase
 from mjs_client.game.gamestate import GameState, Open, OpenType, Discard
-from mjs_client.game.operation import AbstractOperation, PlayTile, Liqi, AbstractCallOperation
 
 from ...image import abs_anchor, Img, ROTATION_MATRICES
 
@@ -28,7 +28,8 @@ class TileInfo:
 
 
 class AbstractTileGroup:
-    def __init__(self, canvas: tk.Canvas, game_state: GameState, origin: tuple[int, int], rotation: int = 0, scale: float = 1,
+    def __init__(self, canvas: tk.Canvas, game_state: GameState,
+                 origin: tuple[int, int], rotation: int = 0, scale: float = 1,
                  bind_function: Callable[[AbstractOperation, tk.Event], Any] = None):
         self.canvas = canvas
         self.game_state = game_state
@@ -66,7 +67,8 @@ class AbstractTileGroup:
                 if info.spacing > 0:
                     i_increment = int(i_increment * info.spacing)
                 else:
-                    image = Img("{}.png".format(info.tile), rotation=self.rotation+info.rel_rotation, scale=self.scale, alpha=info.alpha)
+                    image = Img("{}.png".format(info.tile), rotation=self.rotation+info.rel_rotation,
+                                scale=self.scale, alpha=info.alpha)
                     self.image_cache.append(image)
 
                     j = self.img_height * (row_idx + 1) - info.addgang * self.img_width
@@ -74,7 +76,8 @@ class AbstractTileGroup:
                     self.last_image_id.append(self.canvas.create_image(self.origin[0] + rel_x, self.origin[1] + rel_y,
                                                                        image=image, anchor=self._anchor))
                     if info.bind_operation is not None and self.bind_function is not None:
-                        self.canvas.tag_bind(self.last_image_id[-1], "<Button-1>", partial(self.bind_function, info.bind_operation))
+                        self.canvas.tag_bind(self.last_image_id[-1], "<Button-1>",
+                                             partial(self.bind_function, info.bind_operation))
                 if not info.addgang:
                     i += i_increment
 
@@ -97,7 +100,6 @@ class HandTileGroup(AbstractTileGroup):
         self.last_tile_do_spacing: bool = False
         self.liqi_pressed: bool = False
 
-
     def update_state(self):
         self.opens = reversed(self.game_state.player_opens[self.seat])
         self.peis = len(self.game_state.player_peis[self.seat])
@@ -109,10 +111,11 @@ class HandTileGroup(AbstractTileGroup):
                 self.hand_tiles = self.game_state.my_hand
                 return
         elif self.game_state.phase == GamePhase.BETWEEN_ROUNDS:
-            if self.seat in self.game_state.round_result.shown_hands:
-                self.last_tile_do_spacing = True
-                self.hand_tiles = self.game_state.round_result.shown_hands[self.seat][0]
-                return
+            for shown_hand in self.game_state.round_result.shown_hands:
+                if self.seat == shown_hand.seat:
+                    self.last_tile_do_spacing = True
+                    self.hand_tiles = shown_hand.hand_tiles
+                    return
         self.hand_tiles = ["00"] * self.game_state.player_hand_size[self.seat]
 
     def grid_tile(self) -> list[list[TileInfo]]:
@@ -120,8 +123,10 @@ class HandTileGroup(AbstractTileGroup):
         if len(self.hand_tiles) % 3 == 2:
             if self.last_tile_do_spacing:
                 retval_0.insert(-1, TileInfo(tile="", spacing=0.5))
-                if retval_0[-1].bind_operation is not None:
-                    retval_0[-1].bind_operation.is_moqie = True
+
+                last_tile_bind_op: AbstractPlayTile | None = retval_0[-1].bind_operation
+                if last_tile_bind_op is not None:
+                    last_tile_bind_op.is_moqie = True
             else:
                 retval_0.append(TileInfo(tile="", spacing=0.5))
         else:  # == 1:
@@ -142,12 +147,13 @@ class HandTileGroup(AbstractTileGroup):
                     insert_idx = (len(tiles_self), 1, 0)[open_.direction-1]
                     new_tile_infos.insert(insert_idx, TileInfo(tile=open_.tile_from_other, rel_rotation=1))
                     if open_.type == OpenType.ADDGANG:
-                        new_tile_infos.insert(insert_idx+1, TileInfo(tile=open_.tiles_self[-1], rel_rotation=1, addgang=True))
+                        new_tile_infos.insert(insert_idx+1, TileInfo(tile=open_.tiles_self[-1], rel_rotation=1,
+                                                                     addgang=True))
                     retval_0.extend(new_tile_infos)
         return [retval_0]
 
     def _get_hand_tile_info(self, tile: str) -> TileInfo:
-        #logging.info(f"In _get_hand_tile_info: {self.liqi_pressed}")
+        # logging.info(f"In _get_hand_tile_info: {self.liqi_pressed}")
         if self.rotation != 0:
             return TileInfo(tile=tile)
         if self.liqi_pressed:
@@ -159,21 +165,15 @@ class HandTileGroup(AbstractTileGroup):
         return TileInfo(tile=tile, bind_operation=PlayTile(tile=tile, is_moqie=False))
 
 
-class TestHandTileGroup(HandTileGroup):
-    """Debugging only"""
-    def update_state(self):
-        self.hand_tiles = ["0s"]
-        self.opens = [Open(type=OpenType.ADDGANG, tiles_self=["5s", "5s", "0s"], direction=1, tile_from_other="5s") for i in range(4)]
-
-
 class DiscardTileGroup(AbstractTileGroup):
     CHANGEROWS = (0, 6, 12)
-    def __init__(self, canvas: tk.Canvas, game_state: GameState, origin: tuple[int, int], rotation: int = 0, scale: float = 1):
+
+    def __init__(self, canvas: tk.Canvas, game_state: GameState,
+                 origin: tuple[int, int], rotation: int = 0, scale: float = 1):
         super().__init__(canvas, game_state, origin, rotation, scale)
         self.discards: list[Discard] = []
 
     def update_state(self):
-        #logging.info(game_state.player_discards)
         self.discards = self.game_state.player_discards[self.seat]
 
     def grid_tile(self) -> list[list[TileInfo]]:
@@ -185,12 +185,12 @@ class DiscardTileGroup(AbstractTileGroup):
                 retval.append(current_row)
             current_row.append(TileInfo(tile=discard.tile, rel_rotation=int(discard.is_liqi),
                                         alpha=0.5 if discard.called else 1.0))
-        #logging.info(retval)
         return retval
 
 
 class DoraGroup(AbstractTileGroup):
-    def __init__(self, canvas: tk.Canvas, game_state: GameState, origin: tuple[int, int], rotation: int = 0, scale: float = 1):
+    def __init__(self, canvas: tk.Canvas, game_state: GameState,
+                 origin: tuple[int, int], rotation: int = 0, scale: float = 1):
         super().__init__(canvas, game_state, origin, rotation, scale)
         self.doras = []
 
@@ -203,7 +203,8 @@ class DoraGroup(AbstractTileGroup):
 
 
 class CallSelectionGroup(AbstractTileGroup):
-    def __init__(self, canvas: tk.Canvas, game_state: GameState, origin: tuple[int, int], rotation: int = 0, scale: float = 1,
+    def __init__(self, canvas: tk.Canvas, game_state: GameState,
+                 origin: tuple[int, int], rotation: int = 0, scale: float = 1,
                  bind_function: Callable[[AbstractOperation, tk.Event], Any] = None):
         super().__init__(canvas, game_state, origin, rotation, scale, bind_function)
         self.operation_list: list[AbstractCallOperation] = []

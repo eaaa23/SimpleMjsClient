@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
-from typing import Sequence, Callable
+from typing import Sequence, Callable, cast
 
-from mjs_client.const import TIME_FIXED_ADD
+from mjs_client.const import TIME_FIXED_ADD, PlayerCount
 from mjs_client.rule import is_valid_point, get_default_rule, DetailRule
 
 from ...language import tr
@@ -12,6 +12,7 @@ from ..abstract import AbstractScreen
 
 class RadiobuttonGroup:
     TK_VARTYPE = {int: tk.IntVar, str: tk.StringVar, bool: tk.BooleanVar}
+
     def __init__(self, parent, values: Sequence[int | str | bool],
                  grid_coord: tuple[int, int], init_value=None, command: Callable = None):
         self.frame = tk.Frame(parent)
@@ -47,12 +48,10 @@ class CreateRoomScreen(AbstractScreen):
         self.group_player_count = RadiobuttonGroup(self.frame, (4, 3),
                                                    (0, 1), 4, self.on_player_count_change)
 
-
         self.label_is_east = tk.Label(self.frame)
         self.label_is_east.grid(row=1, column=0)
         self.group_is_east = RadiobuttonGroup(self.frame, (True, False),
                                               (1, 1), True)
-
 
         self.label_time_index = tk.Label(self.frame)
         self.label_time_index.grid(row=2, column=0)
@@ -115,7 +114,7 @@ class CreateRoomScreen(AbstractScreen):
         if init_point == -1 or fandian == -1:
             messagebox.showerror(tr("error.point.title"), tr("error.point.text"))
             return
-        player_count = self.group_player_count.get()
+        player_count: PlayerCount = cast(PlayerCount, self.group_player_count.get())
         is_east = self.group_is_east.get()
         dora_count = get_default_rule(player_count).dora_count
         time_fixed, time_add = TIME_FIXED_ADD[self.group_time_index.get()]
@@ -143,4 +142,3 @@ class CreateRoomScreen(AbstractScreen):
         self.label_ai_level.config(text=tr("lobby.create_room.ai_level.label"))
         self.group_ai_level.update_text("lobby.create_room.ai_level.{}")
         self.button_create.config(text=tr("lobby.create_room.create"))
-

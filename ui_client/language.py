@@ -23,18 +23,23 @@ def load_languages():
             except (JSONDecodeError, UnicodeDecodeError, AttributeError):
                 pass
 
+
 load_languages()
 if not _languages:
     raise FileNotFoundError("No valid language file found!")
 
+
 def get_available_languages() -> list[str]:
     return list(_languages.keys())
+
 
 def get_language_from_name(name: str) -> str:
     return _name_to_lang[name]
 
+
 def get_language() -> str:
     return _current_lang
+
 
 def set_language(lang: str):
     global _current_lang
@@ -53,4 +58,3 @@ def tr(key: str, lang=None) -> str:
     if isinstance(text_data, str):
         return text_data
     return key
-

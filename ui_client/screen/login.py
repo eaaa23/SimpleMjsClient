@@ -9,9 +9,9 @@ from .abstract import AbstractScreen
 from .settings.button import SettingsButton
 
 
-
 class LoginScreen(AbstractScreen):
     PHASE = ClientPhase.BEFORE_LOGIN
+
     def __init__(self, parent, ui):
         super().__init__(parent, ui)
 

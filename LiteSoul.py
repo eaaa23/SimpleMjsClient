@@ -31,7 +31,6 @@ try:
                   logging.StreamHandler()]
     )
 
-
     from ui_client.ui import UI
     UI().mainloop()
 

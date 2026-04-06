@@ -1,14 +1,14 @@
-import tkinter as tk
 from functools import partial
+import tkinter as tk
 
 from mjs_client.client import ClientPhase
-from mjs_client.const import ModeInt
+from mjs_client.const import ModeInt, PlayerCount
 from mjs_client.level import get_match_level_dict
 
 from ...language import tr
-from ..settings.button import SettingsButton
 
 from ..abstract import AbstractScreen
+from ..settings.button import SettingsButton
 
 from .create_room import CreateRoomScreen
 from .join_room import JoinRoomScreen
@@ -18,7 +18,7 @@ class LobbyLevelFrame:
     """
     This is not a screen, only a frame in LobbyScreen
     """
-    def __init__(self, parent, ui, match_level: int, available_player_count: set[int]):
+    def __init__(self, parent, ui, match_level: int, available_player_count: set[PlayerCount]):
         self.parent = parent
         self.ui = ui
         self.match_level = match_level
@@ -60,9 +60,9 @@ class LobbyLevelFrame:
         self.button_3S.config(text=tr("game.mode.{}".format(ModeInt.MODE_3S)))
 
 
-
 class LobbyScreen(AbstractScreen):
     PHASE = ClientPhase.LOBBY
+
     def __init__(self, parent, ui):
         super().__init__(parent, ui)
 
@@ -101,12 +101,11 @@ class LobbyScreen(AbstractScreen):
 
         self.update_text()
 
-    def get_account_info_text(self, player_count: int) -> str:
+    def get_account_info_text(self, player_count: PlayerCount) -> str:
         level = self.client.account_level[player_count]
         return (tr("game.player_count.{}".format(player_count)) +
                 tr("game.level.{}".format(level.level)) +
                 "{}    {}/{}".format(level.sublevel, level.score, level.get_max_score()))
-
 
     def update_text(self):
         self.account_info_4.config(text=self.get_account_info_text(4))

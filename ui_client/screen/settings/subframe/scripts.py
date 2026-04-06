@@ -1,11 +1,11 @@
-import logging
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import filedialog, messagebox
 from typing import Callable, Any
 
-from ...treeview_list import TreeviewList, TreeviewColumn
 from ....language import tr
-from ....scripts import PackageScriptManager, PackageWrapper, LoadPackageCode, ScriptClassWrapper
+from ....scripts import PackageScriptManager, LoadPackageCode, ScriptClassWrapper
+
+from ...treeview_list import TreeviewList, TreeviewColumn
 
 from .. import SettingsSubframe
 
@@ -50,7 +50,6 @@ class ScriptsFrame(SettingsSubframe):
         self.script_resync_button.grid(row=0, column=2)
 
         self.scripts_treeview_list.reset_to(self.scripts_manager)
-
 
     def apply(self):
         pass
@@ -103,8 +102,8 @@ class ScriptsFrame(SettingsSubframe):
         if not target_packages_names:
             return
 
-        dialog_text = tr("settings.scripts.dialog.remove").format(len(target_packages_names)) \
-                       + '\n'.join(target_packages_display_names)
+        dialog_text = (tr("settings.scripts.dialog.remove").format(len(target_packages_names))
+                       + '\n'.join(target_packages_display_names))
         ok = messagebox.askokcancel(tr("settings.scripts.dialog.title_warning"), dialog_text)
         if not ok:
             return

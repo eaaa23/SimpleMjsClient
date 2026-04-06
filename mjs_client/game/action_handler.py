@@ -1,24 +1,23 @@
-import asyncio
+import logging
 
 from sortedcontainers import SortedList
 
-from ..const import OperationType
+from ..api import protocol_pb2 as pb
+from ..const import PlayerCount
+
 from .action import AbstractGameAction, RoundEnder
 from .gamestate import GameState, EndResult
-from .operation import AbstractOperation, OPERATION_CLASS_DICT
-from .phases import GamePhase
 from .operation_container import OperationContainer
+from .phases import GamePhase
 
 
 class GameActionHandler:
-    def __init__(self, game, player_count: int, is_east: bool, my_seat: int):
+    def __init__(self, game, player_count: PlayerCount, is_east: bool, my_seat: int):
         self.game = game
-        self.action_queue = SortedList()
+        self.action_queue: SortedList[AbstractGameAction] = SortedList()
         self.game_state: GameState = GameState(player_count, is_east, my_seat)
-        self.possible_operations = OperationContainer()
-        self.next_step = 0
-        self.lock = asyncio.Event()
-        self.lock.set()
+        self.possible_operations: OperationContainer = OperationContainer()
+        self.next_step: int = 0
 
     def add_action(self, action: AbstractGameAction):
         self.action_queue.add(action)
@@ -28,11 +27,11 @@ class GameActionHandler:
         self.next_step = 0
 
     async def update(self):
-        await self.lock.wait()
         for i in range(len(self.action_queue)):
             this_action: AbstractGameAction = self.action_queue[0]
             if self.next_step > this_action.step:
-                raise ValueError(f"GameActionQueue Failure: GameActionHandler ptr at {self.next_step}, received action step={this_action.step}")
+                raise ValueError(f"GameActionQueue Failure: GameActionHandler ptr at {self.next_step}, "
+                                 f"received action step={this_action.step}")
             elif self.next_step == this_action.step:
                 if isinstance(this_action, RoundEnder):
                     self.game_state.round_result = this_action.result(self.game_state)
@@ -51,13 +50,12 @@ class GameActionHandler:
                 self.action_queue.pop(0)
                 self.next_step += 1
                 self.game.client.update_event.set()
-                #logging.info(f"ActionHandler updated step from {this_action.step} to {self.next_step}")
+                # logging.info(f"ActionHandler updated step from {this_action.step} to {self.next_step}")
             else:
-                #logging.info(f"ActionHandler blocking, now ptr at {self.next_step}, this_action at {this_action.step}")
+                logging.warn(f"ActionHandler blocking, now ptr at {self.next_step}, this_action at {this_action.step}")
                 break
-        #logging.info(f"Debug-gamestate: my_hand={self.game_state.my_hand}")
 
-    def end_game(self, result_protobuf):
+    def end_game(self, result_protobuf: pb.GameEndResult):
         self.clear_actions()
         self.game_state.game_result = [EndResult(seat=player_item.seat,
                                                  point=player_item.part_point_1,

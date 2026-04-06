@@ -2,7 +2,7 @@ import logging
 
 from mjs_client.const import OperationType
 from mjs_client.game.gamestate import GameState
-from mjs_client.game.operation import AbstractOperation, AbstractPlayTile, PlayTile
+from mjs_client.game.operation import PlayTile
 from mjs_client.game.operation_container import OperationContainer
 from script_api import AbstractScript, Evaluation
 

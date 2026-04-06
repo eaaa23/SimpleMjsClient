@@ -1,9 +1,9 @@
-import os
-import json
 from base64 import b64encode, b64decode
 from dataclasses import dataclass, field, fields, asdict, is_dataclass
+import json
 from json import JSONDecodeError
-from typing import Any, get_args, get_origin
+import os
+from typing import Any, get_args
 
 from .language import get_available_languages
 
@@ -63,8 +63,10 @@ class Config:
 
     def save(self, config_path: str = CONFIG_PATH):
         with open(config_path, 'w') as fp:
-            json.dump(asdict(self, dict_factory=lambda data: {key: value.to_dict() if hasattr(value, "to_dict") else value
-                                                              for key, value in data}), fp)
+            json.dump(asdict(self,
+                             dict_factory=lambda data: {key: value.to_dict() if hasattr(value, "to_dict") else value
+                                                        for key, value in data}),
+                      fp)
 
 
 def _translate_list(lst: list, type_: type) -> list:

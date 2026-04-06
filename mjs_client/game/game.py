@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from urllib.parse import urljoin
 
 from google.protobuf.message import DecodeError
@@ -6,6 +7,7 @@ from google.protobuf.message import DecodeError
 from ..api.base import MSRPCChannel
 from ..api.rpc import FastTest
 from ..api import protocol_pb2 as pb
+from ..const import PlayerCount
 from ..rule import DetailRule
 
 from . import action
@@ -16,7 +18,8 @@ from .phases import GamePhase
 
 
 class Game:
-    def __init__(self, client, connect_token: str, game_uuid: str, player_count: int, is_east: bool, rule: DetailRule, from_room: bool):
+    def __init__(self, client, connect_token: str, game_uuid: str, player_count: PlayerCount, is_east: bool,
+                 rule: DetailRule, from_room: bool):
         self.client = client
         self.connect_token = connect_token
         self.game_uuid = game_uuid
@@ -36,11 +39,11 @@ class Game:
     async def start(self):
         self.channel = MSRPCChannel(urljoin(self.client.endpoint, "game-gateway-zone"))
         self.fasttest = FastTest(self.channel)
-        #self.game_channel.add_hook(".lq.NotifyGameEndResult", lambda data: Game._hook_notify_game_end_result(self, data), id(self))
+
         await self.channel.connect(self.client.ms_host)
-        res_auth = await self.fasttest.auth_game(
-            pb.ReqAuthGame(account_id=self.client.account_id, token=self.connect_token,
-                   game_uuid=self.game_uuid))
+        res_auth: pb.ResAuthGame = await self.fasttest.auth_game(pb.ReqAuthGame(account_id=self.client.account_id,
+                                                                                token=self.connect_token,
+                                                                                game_uuid=self.game_uuid))
 
         self.my_seat = res_auth.seat_list.index(self.client.account_id)
         for account_id in res_auth.seat_list:
@@ -55,15 +58,14 @@ class Game:
         self.channel.add_hook(".lq.ActionPrototype", self._hook_action_prototype)
         self.channel.add_hook(".lq.NotifyGameEndResult", self._hook_game_end)
         await self.fasttest.enter_game(pb.ReqCommon())
-        #asyncio.create_task(heartbeat(self.game_channel))
         self.action_handler.game_state.phase = GamePhase.STARTING
         self.game_start_event.set()
 
     async def _hook_action_prototype(self, data):
-        action_prototype = pb.ActionPrototype.FromString(data)
+        action_prototype: pb.ActionPrototype = pb.ActionPrototype.FromString(data)
         if action_prototype.name not in action.NAME_DICT:
-            #logging.warn(f"ActionPrototype {action_prototype.name} not in action.NAME_DICT, change to PlaceHolder")
-            self.action_handler.add_action(action.PlaceHolder(action_prototype.step, action_prototype.data))
+            logging.warn(f"ActionPrototype {action_prototype.name} not in action.NAME_DICT, change to PlaceHolder")
+            self.action_handler.add_action(action.PlaceHolder(action_prototype.step, None))
         else:
             try:
                 data_decoded = decode(action_prototype.data)
@@ -77,14 +79,14 @@ class Game:
                         data_obj = action.NAME_DICT[action_prototype.name].data_class.FromString(data_decoded)
                         break
                 else:
-                    #logging.warn(f"ActionPrototype {action_prototype.name}, step={action_prototype.step} not found in ResSyncGame! Change to PlaceHolder")
-                    self.action_handler.add_action(action.PlaceHolder(action_prototype.step, action_prototype.data))
+                    logging.warn(f"ActionPrototype {action_prototype.name}, step={action_prototype.step} "
+                                 f"not found in ResSyncGame! Change to PlaceHolder")
+                    self.action_handler.add_action(action.PlaceHolder(action_prototype.step, None))
                     await self.action_handler.update()
                     return
 
-            #logging.info(f"Received {action_prototype.name}:\n {data_obj}")
-            self.action_handler.add_action(
-                action.NAME_DICT[action_prototype.name](action_prototype.step, data_obj))
+            logging.info(f"Received {action_prototype.name}:\n {data_obj}")
+            self.action_handler.add_action(action.NAME_DICT[action_prototype.name](action_prototype.step, data_obj))
 
         await self.action_handler.update()
 

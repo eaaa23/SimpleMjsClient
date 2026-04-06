@@ -1,24 +1,24 @@
-import asyncio
-from typing import Any, Callable, Coroutine
-import logging
 import aiohttp
-import uuid
+import asyncio
+from enum import IntEnum
 import hashlib
 import hmac
+import logging
+from typing import Callable, Coroutine
 from urllib.parse import urljoin
-from enum import Enum, IntEnum
+import uuid
 
 from .accident import Accident
-from .api.base import MSRPCChannel, ONCE_HOOK
-from .api.rpc import Lobby, FastTest
 from .api import protocol_pb2 as pb
+from .api.base import MSRPCChannel, ONCE_HOOK
+from .api.rpc import Lobby
+from .const import MS_HOST, ENDPOINT, MATCH_SID, MODE_INT, LevelMain, PlayerCount
+from .exceptions import LoginError, JoinRoomError, PhaseInvalid
 from .game.game import Game
 from .game.operation import AbstractOperation
-from .room import Room
 from .level import Level
-from .rule import DetailRule, get_default_rule, get_mode_int
-from .const import MS_HOST, ENDPOINT, MatchSid, MATCH_SID, MODE_INT
-from .exceptions import LoginError, StartUnifiedMatchError, CreateRoomError, JoinRoomError, PhaseInvalid
+from .room import Room
+from .rule import DetailRule, get_default_rule
 
 
 class ClientPhase(IntEnum):
@@ -27,6 +27,7 @@ class ClientPhase(IntEnum):
     LOBBY = 2
     INGAME = 3
     INROOM = 4
+
 
 _CLIENT_PHASE_COUNT = 5
 
@@ -41,26 +42,25 @@ def limit(*phases):
     return decor
 
 
-
 class MahjongSoulClient:
     def __init__(self):
-        self.phase = ClientPhase.BLANK
-        self.update_event = asyncio.Event()
-        self._events = [asyncio.Event() for i in range(_CLIENT_PHASE_COUNT)]
+        self.phase: ClientPhase = ClientPhase.BLANK
+        self.update_event: asyncio.Event = asyncio.Event()
+        self._events: list[asyncio.Event] = [asyncio.Event() for i in range(_CLIENT_PHASE_COUNT)]
         self.accidents: asyncio.Queue[Accident] = asyncio.Queue()
 
-        self.ms_host = ""
-        self.endpoint = ""
-        self.version_to_force = ""
+        self.ms_host: str = ""
+        self.endpoint: str = ""
+        self.version_to_force: str = ""
         self.lobby: Lobby | None = None
         self.channel: MSRPCChannel | None = None
         self.account_id: int = 0
         self.account_name: str = ""
-        self.account_level: dict[int, Level] = {}
+        self.account_level: dict[PlayerCount, Level] = {}
         self.game: Game | None = None
         self.room: Room | None = None
 
-    def _set_phase(self, phase: int):
+    def _set_phase(self, phase: ClientPhase):
         self._events[self.phase].clear()
         self._events[phase].set()
         self.phase = phase
@@ -69,11 +69,11 @@ class MahjongSoulClient:
     def add_hook(self, msg_type: str, hook: Callable[[], Coroutine]):
         self.channel.add_hook(msg_type, lambda data: hook())
 
-    async def connect(self, route:int=2, ms_host:str=MS_HOST, endpoint:str=ENDPOINT, ssl:bool=True):
+    async def connect(self, route: int = 2, ms_host: str = MS_HOST, endpoint: str = ENDPOINT, ssl: bool = True):
         async with aiohttp.ClientSession() as session:
             async with session.get(urljoin(ms_host, "/1/version.json"), ssl=ssl) as res:
                 version = await res.json()
-                #logging.info(f"Version: {version}")
+                # logging.info(f"Version: {version}")
                 version = version["version"]
                 self.version_to_force = version.replace(".w", "")
 
@@ -99,10 +99,10 @@ class MahjongSoulClient:
         uuid_key = str(uuid.uuid1())
 
         req = pb.ReqLogin(account=username, password=hmac.new(b"lailai", password.encode(), hashlib.sha256).hexdigest(),
-                     random_key=uuid_key, gen_access_token=True, client_version_string=f"web-{self.version_to_force}",
-                     currency_platforms=[2])
-        req.device.is_browser = True
-        res = await self.lobby.login(req)
+                          random_key=uuid_key, gen_access_token=True,
+                          client_version_string=f"web-{self.version_to_force}", currency_platforms=[2],
+                          device=pb.ClientDeviceInfo(is_browser=True))
+        res: pb.ResLogin = await self.lobby.login(req)
         LoginError.check(res)
         self.account_id = res.account_id
         self._update_account_level(res.account)
@@ -113,21 +113,22 @@ class MahjongSoulClient:
 
         self._set_phase(ClientPhase.LOBBY)
 
-    async def _start_game(self, connect_token: str, game_uuid: str, player_count: int, is_east: bool, detail_rule: DetailRule, from_room: bool):
+    async def _start_game(self, connect_token: str, game_uuid: str, player_count: PlayerCount, is_east: bool,
+                          detail_rule: DetailRule, from_room: bool):
         self.game = Game(self, connect_token, game_uuid, player_count, is_east, detail_rule, from_room)
         await self.game.start()
         self._set_phase(ClientPhase.INGAME)
 
     @limit(ClientPhase.LOBBY)
-    async def start_unified_match(self, level: int, player_count: int, is_east: bool):
+    async def start_unified_match(self, level: LevelMain, player_count: PlayerCount, is_east: bool):
         match_sid = MATCH_SID[level][MODE_INT[(player_count, is_east)]]
-        res = await self.lobby.start_unified_match(pb.ReqStartUnifiedMatch(match_sid=f"1:{match_sid}",
-                                                          client_version_string=f"web-{self.version_to_force}"))
-        StartUnifiedMatchError.check(res)
+        await self.lobby.start_unified_match(
+            pb.ReqStartUnifiedMatch(match_sid=f"1:{match_sid}", client_version_string=f"web-{self.version_to_force}"))
 
         async def match_game_start_hook(data):
             data_pb = pb.NotifyMatchGameStart.FromString(data)
-            await self._start_game(data_pb.connect_token, data_pb.game_uuid, player_count, is_east, get_default_rule(player_count), False)
+            await self._start_game(data_pb.connect_token, data_pb.game_uuid, player_count, is_east,
+                                   get_default_rule(player_count), False)
 
         self.channel.add_hook(".lq.NotifyMatchGameStart", match_game_start_hook, ONCE_HOOK)
 
@@ -143,17 +144,19 @@ class MahjongSoulClient:
     async def return_from_game(self):
         await self.game.game_end_event.wait()
         await self.lobby.log_report(pb.ReqLogReport(success=2, failed=2))
-        res_fetch_account_info = await self.lobby.fetch_account_info(pb.ReqAccountInfo(account_id=self.account_id))
-        self._update_account_level(res_fetch_account_info.account)
+        res_account_info: pb.ResAccountInfo = await self.lobby.fetch_account_info(
+            pb.ReqAccountInfo(account_id=self.account_id))
+        self._update_account_level(res_account_info.account)
+
         if self.game.from_room:
-            res_fetch_room = await self.lobby.fetch_room(pb.ReqCommon())
+            res_fetch_room: pb.Room = await self.lobby.fetch_room(pb.ReqCommon())
             self.room = Room(self, join_room_protobuf=res_fetch_room.room)
             self._set_phase(ClientPhase.INROOM)
         else:
             self._set_phase(ClientPhase.LOBBY)
 
     @limit(ClientPhase.LOBBY)
-    async def create_room(self, player_count: int, is_east: bool, detail_rule:DetailRule=None):
+    async def create_room(self, player_count: PlayerCount, is_east: bool, detail_rule: DetailRule = None):
         if player_count not in (3, 4):
             raise ValueError("player_count must be 3 or 4")
         if detail_rule is None:
@@ -171,7 +174,7 @@ class MahjongSoulClient:
         await self.room.start()
 
     @limit(ClientPhase.INROOM)
-    async def room_ready(self, ready: bool, switch:bool=False):
+    async def room_ready(self, ready: bool, switch: bool = False):
         await self.room.ready(ready, switch)
 
     @limit(ClientPhase.INROOM)
@@ -180,7 +183,8 @@ class MahjongSoulClient:
 
     @limit(ClientPhase.INROOM)
     async def join_room(self, room_id: int):
-        res = await self.lobby.join_room(pb.ReqJoinRoom(room_id=room_id, client_version_string=f"web-{self.version_to_force}"))
+        res: pb.ResJoinRoom = await self.lobby.join_room(
+            pb.ReqJoinRoom(room_id=room_id, client_version_string=f"web-{self.version_to_force}"))
         JoinRoomError.check(res)
 
         self.room = Room(self, join_room_protobuf=res.room)
@@ -193,7 +197,3 @@ class MahjongSoulClient:
 
     async def _call_on_return_from_room(self):
         self._set_phase(ClientPhase.LOBBY)
-
-
-
-

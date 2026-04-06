@@ -1,7 +1,7 @@
 import asyncio
+from functools import partial
 import logging
 import queue
-from functools import partial
 from threading import Thread
 from typing import Any, Callable
 
@@ -15,7 +15,7 @@ class UpdateEvent:
     pass
 
 
-def _mirror(client_method):
+def _mirror(client_method: Callable):
     def retval(f):
         def func(self, *args, **kwargs):
             self._put_queue_upload((partial(client_method, self.client), args, kwargs))
@@ -53,7 +53,7 @@ class ClientController:
             try:
                 await func(*args, **kwargs)
             except ClientError as e:
-                #logging.error(e)
+                # logging.error(e)
                 self._error_trigger(e)
 
     def start(self):
@@ -65,7 +65,6 @@ class ClientController:
         if not self.started:
             raise ControllerError("Controller not started")
         logging.info(f"_put_queue_upload {item}")
-        #self._queue_upload.put(item)
         self._queue_upload.sync_q.put(item)
 
     @_mirror(MahjongSoulClient.connect)
@@ -119,4 +118,3 @@ class ClientController:
     @_mirror(MahjongSoulClient.return_from_game)
     def return_from_game(self, *args, **kwargs):
         pass
-
