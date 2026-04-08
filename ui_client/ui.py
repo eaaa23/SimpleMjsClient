@@ -29,16 +29,6 @@ class UI:
         self.root = tk.Tk()
         self.root.title(tr("title"))
 
-        self.tray_menu = pystray.Menu(MenuItem(tr("tray.show"), self.show_from_tray),
-                                      MenuItem(tr("tray.quit"), self.quit_from_tray))
-        self.tray_icon = pystray.Icon("MjsClient", Image.open("assets/tray.png"), tr("title"), self.tray_menu)
-        if os.name == "posix":
-            logging.info("Posix system, tray icon run detached")
-            self.tray_icon.run_detached()
-        else:
-            Thread(target=self.tray_icon.run, daemon=True).start()
-        self.root.protocol("WM_DELETE_WINDOW", self.hide)
-
         self.client = MahjongSoulClient()
         self.controller = ClientController(self.client)
 
@@ -89,6 +79,16 @@ class UI:
             error_text += tr("error.error_code").format(e.args[0])
         logging.error(f"{type(e).__name__} {e}")
         messagebox.showerror(error_title, error_text)
+
+
+class UIWithTray(UI):
+    def __init__(self):
+        super().__init__()
+        self.tray_menu = pystray.Menu(MenuItem(tr("tray.show"), self.show_from_tray),
+                                      MenuItem(tr("tray.quit"), self.quit_from_tray))
+        self.tray_icon = pystray.Icon("MjsClient", Image.open("assets/tray.png"), tr("title"), self.tray_menu)
+        self.tray_icon.run_detached()
+        self.root.protocol("WM_DELETE_WINDOW", self.hide)
 
     def hide(self):
         """
