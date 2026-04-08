@@ -1,7 +1,12 @@
 from functools import partial
 import logging
+from threading import Thread
 import tkinter as tk
 from tkinter import messagebox
+
+from PIL import Image
+import pystray
+from pystray import MenuItem
 
 from mjs_client.client import MahjongSoulClient
 from mjs_client.controller import ClientController
@@ -22,6 +27,14 @@ class UI:
 
         self.root = tk.Tk()
         self.root.title(tr("title"))
+
+        self.tray_menu = pystray.Menu(MenuItem(tr("tray.show"), self.show_from_tray),
+                                      MenuItem(tr("tray.quit"), self.quit_from_tray))
+        self.tray_icon = pystray.Icon("MjsClient", Image.open("assets/tray.png"), tr("title"), self.tray_menu)
+        self.tray_thread = Thread(target=self.tray_icon.run, daemon=True)
+        self.tray_thread.start()
+
+        self.root.protocol("WM_DELETE_WINDOW", self.hide)
 
         self.client = MahjongSoulClient()
         self.controller = ClientController(self.client)
@@ -73,3 +86,30 @@ class UI:
             error_text += tr("error.error_code").format(e.args[0])
         logging.error(f"{type(e).__name__} {e}")
         messagebox.showerror(error_title, error_text)
+
+    def hide(self):
+        """
+        Hook on user clicking "X" on the root window. Hook to tkinter WM_DELETE_WINDOW
+        """
+        self.root.withdraw()
+        if self.tray_icon:
+            self.tray_icon.visible = True
+
+    def show_from_tray(self, icon=None, item=None):
+        """
+        Hook to show window by tray icon.
+        """
+        if icon:
+            icon.visible = True
+        self.root.deiconify()
+        self.root.lift()
+        self.root.focus_force()
+
+    def quit_from_tray(self, icon=None, item=None):
+        """
+        Hook to quit app by tray icon.
+        """
+        if icon:
+            icon.stop()
+        self.root.quit()
+        self.root.destroy()
