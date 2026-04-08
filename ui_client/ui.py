@@ -3,6 +3,10 @@ import logging
 import tkinter as tk
 from tkinter import messagebox
 
+from PIL import Image
+import pystray
+from pystray import MenuItem
+
 from mjs_client.client import MahjongSoulClient
 from mjs_client.controller import ClientController
 from mjs_client.exceptions import MjsError
@@ -22,6 +26,8 @@ class UI:
 
         self.root = tk.Tk()
         self.root.title(tr("title"))
+
+        self.background = False   # This will always be False unless in UIWithTray
 
         self.client = MahjongSoulClient()
         self.controller = ClientController(self.client)
@@ -54,12 +60,13 @@ class UI:
         self.root.mainloop()
 
     def update(self, event):
-        logging.info("UI.update")
+        # logging.info("UI.update")
         if self.client.phase != self.current_screen.PHASE:
             logging.info(f"UI change current screen, from {self.current_screen.PHASE} to {self.client.phase}")
             self.change_current_screen(MAIN_SCREENS[self.client.phase])
-        self.current_screen.update()
-        self.root.update_idletasks()
+        self.current_screen.update(self.background)
+        if not self.background:
+            self.root.update_idletasks()
 
     def change_current_screen(self, screen_type):
         self.current_screen.destroy()
@@ -73,3 +80,41 @@ class UI:
             error_text += tr("error.error_code").format(e.args[0])
         logging.error(f"{type(e).__name__} {e}")
         messagebox.showerror(error_title, error_text)
+
+
+class UIWithTray(UI):
+    def __init__(self):
+        super().__init__()
+        self.tray_menu = pystray.Menu(MenuItem(tr("tray.show"), self.show_from_tray),
+                                      MenuItem(tr("tray.quit"), self.quit_from_tray))
+        self.tray_icon = pystray.Icon("MjsClient", Image.open("assets/tray.png"), tr("title"), self.tray_menu)
+        self.tray_icon.run_detached()
+        self.root.protocol("WM_DELETE_WINDOW", self.hide)
+
+    def hide(self):
+        """
+        Hook on user clicking "X" on the root window. Hook to tkinter WM_DELETE_WINDOW
+        """
+        self.root.withdraw()
+        self.background = True
+        if self.tray_icon:
+            self.tray_icon.visible = True
+
+    def show_from_tray(self, icon=None, item=None):
+        """
+        Hook to show window by tray icon.
+        """
+        self.background = False
+        if icon:
+            icon.visible = True
+        self.root.deiconify()
+        self.root.lift()
+        self.root.focus_force()
+        self.update(None)
+
+    def quit_from_tray(self, icon=None, item=None):
+        """
+        Hook to quit app by tray icon.
+        """
+        self.root.quit()
+        self.root.destroy()

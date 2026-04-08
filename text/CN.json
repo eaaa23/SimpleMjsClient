@@ -2,6 +2,10 @@
   "name": "简体中文",
 
   "title": "雀魂麻将Lite",
+  "tray": {
+    "show": "显示窗口",
+    "quit": "退出"
+  },
   "button": {
     "settings": "设置",
     "confirm": "确定"

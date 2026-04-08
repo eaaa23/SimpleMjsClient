@@ -31,8 +31,8 @@ try:
                   logging.StreamHandler()]
     )
 
-    from ui_client.ui import UI
-    UI().mainloop()
+    from ui_client.ui import UIWithTray
+    UIWithTray().mainloop()
 
 except Exception as e:
     with open("fail_log.txt", 'w') as fp:

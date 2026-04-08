@@ -33,7 +33,7 @@ class SettingScreen(AbstractScreen):
             subframe_.apply()
         self.ui.save_config()
 
-    def update(self):
+    def update(self, background: bool = False):
         for subframe_ in self.subframes:
             subframe_.update()
 

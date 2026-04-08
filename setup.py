@@ -8,7 +8,7 @@ from setuptools import setup
 
 # PIL is automatically included by py2app
 APP = ["LiteSoul.py"]
-PACKAGES = ["websockets", "aiohttp", "culsans", "google"]
+PACKAGES = ["websockets", "aiohttp", "culsans", "google", "pystray"]
 PROJECT_PACKAGES = []
 RESOURCES = ["text", "assets", "scripts"]
 ICONFILE = "icon/icon.icns"

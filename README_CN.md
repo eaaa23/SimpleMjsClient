@@ -17,7 +17,7 @@
 - - sortedcontainers
 
 安装:  
-`pip install websockets==15.0.1 aiohttp==3.9.0 culsans==0.11.0 pillow==12.0.0 protobuf==3.20.0 sortedcontainers`
+`pip install websockets aiohttp culsans pillow protobuf==3.20.0 sortedcontainers pystray`
 
 
 ## 运行
