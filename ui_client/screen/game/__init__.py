@@ -167,27 +167,31 @@ class GameScreen(AbstractScreen):
     def update_text(self):
         self.assistant.update_text()
 
-    def update(self):
+    def bot_operate(self):
+        if self.assistant.running_bot is not None and self.possible_operations:
+            operation_phase = self.possible_operations.phase
+            logging.info(f"{operation_phase=}")
+            if operation_phase != OperationPhase.NO_OPERATION:
+                decision = self.assistant.running_bot.decision(self.possible_operations, self.game_state)
+                logging.info(f"AutoBot Decision: {decision}")
+
+                if decision is None:
+                    # Another try: default
+                    decision = self.possible_operations.get_default()
+
+                # decision might still be None... whatever. Ignore the case when decision is None
+                if decision is not None:
+                    logging.info(f"Final Decision: {decision}")
+                    self.controller.game_put_operation(decision)
+
+    def update(self, background: bool = False):
+        self.bot_operate()
+        if background:
+            return
+
         if self.assistant.running_bot is None:
             self.operation_button_group.update()
             self.call_selection_subframe.clear()
-        else:
-            if self.possible_operations:
-                operation_phase = self.possible_operations.phase
-                logging.info(f"{operation_phase=}")
-                if operation_phase != OperationPhase.NO_OPERATION:
-                    decision = self.assistant.running_bot.decision(self.possible_operations, self.game_state)
-                    logging.info(f"AutoBot Decision: {decision}")
-
-                    if decision is None:
-                        # Another try: default
-                        decision = self.possible_operations.get_default()
-
-                    # decision might still be None... whatever. Ignore the case when decision is None
-                    if decision is not None:
-                        logging.info(f"Final Decision: {decision}")
-                        self.controller.game_put_operation(decision)
-
         for rotation in range(4):
             self.hand_tile_groups[rotation].redraw()
             self.discard_groups[rotation].redraw()

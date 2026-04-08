@@ -1,7 +1,5 @@
 from functools import partial
 import logging
-import os
-from threading import Thread
 import tkinter as tk
 from tkinter import messagebox
 
@@ -28,6 +26,8 @@ class UI:
 
         self.root = tk.Tk()
         self.root.title(tr("title"))
+
+        self.background = False   # This will always be False unless in UIWithTray
 
         self.client = MahjongSoulClient()
         self.controller = ClientController(self.client)
@@ -60,12 +60,13 @@ class UI:
         self.root.mainloop()
 
     def update(self, event):
-        logging.info("UI.update")
+        # logging.info("UI.update")
         if self.client.phase != self.current_screen.PHASE:
             logging.info(f"UI change current screen, from {self.current_screen.PHASE} to {self.client.phase}")
             self.change_current_screen(MAIN_SCREENS[self.client.phase])
-        self.current_screen.update()
-        self.root.update_idletasks()
+        self.current_screen.update(self.background)
+        if not self.background:
+            self.root.update_idletasks()
 
     def change_current_screen(self, screen_type):
         self.current_screen.destroy()
@@ -95,6 +96,7 @@ class UIWithTray(UI):
         Hook on user clicking "X" on the root window. Hook to tkinter WM_DELETE_WINDOW
         """
         self.root.withdraw()
+        self.background = True
         if self.tray_icon:
             self.tray_icon.visible = True
 
@@ -102,11 +104,13 @@ class UIWithTray(UI):
         """
         Hook to show window by tray icon.
         """
+        self.background = False
         if icon:
             icon.visible = True
         self.root.deiconify()
         self.root.lift()
         self.root.focus_force()
+        self.update(None)
 
     def quit_from_tray(self, icon=None, item=None):
         """
