@@ -1,5 +1,6 @@
 from functools import partial
 import logging
+import os
 from threading import Thread
 import tkinter as tk
 from tkinter import messagebox
@@ -31,9 +32,11 @@ class UI:
         self.tray_menu = pystray.Menu(MenuItem(tr("tray.show"), self.show_from_tray),
                                       MenuItem(tr("tray.quit"), self.quit_from_tray))
         self.tray_icon = pystray.Icon("MjsClient", Image.open("assets/tray.png"), tr("title"), self.tray_menu)
-        self.tray_thread = Thread(target=self.tray_icon.run, daemon=True)
-        self.tray_thread.start()
-
+        if os.name == "posix":
+            logging.info("Posix system, tray icon run detached")
+            self.tray_icon.run_detached()
+        else:
+            Thread(target=self.tray_icon.run, daemon=True).start()
         self.root.protocol("WM_DELETE_WINDOW", self.hide)
 
         self.client = MahjongSoulClient()
@@ -109,7 +112,5 @@ class UI:
         """
         Hook to quit app by tray icon.
         """
-        if icon:
-            icon.stop()
         self.root.quit()
         self.root.destroy()
