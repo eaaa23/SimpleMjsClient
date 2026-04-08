@@ -1,4 +1,5 @@
 import logging
+import os
 import platform
 
 logging.basicConfig(
@@ -16,3 +17,5 @@ if __name__ == '__main__':
         logging.info("Launcher: system not found, system tray disbled")
         ui = UI()
     ui.mainloop()
+    logging.info("mainloop ends")
+    os._exit(0)
