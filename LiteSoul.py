@@ -1,5 +1,5 @@
 """
-This is the entry file for packing App on MacOS.
+This is the entry file for packing App on MacOS or exe on Windows.
 """
 
 try:
@@ -33,6 +33,7 @@ try:
 
     from ui_client.ui import UIWithTray
     UIWithTray().mainloop()
+    os._exit(0)
 
 except Exception as e:
     with open("fail_log.txt", 'w') as fp:

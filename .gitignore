@@ -9,3 +9,4 @@ build
 dist
 .eggs
 icon/makeicon.iconset
+*.spec

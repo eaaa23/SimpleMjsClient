@@ -1,7 +1,7 @@
 from functools import partial
 import logging
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, PhotoImage
 
 from PIL import Image
 import pystray
@@ -26,6 +26,7 @@ class UI:
 
         self.root = tk.Tk()
         self.root.title(tr("title"))
+        self.root.iconphoto(True, PhotoImage(file="assets/icon.png"))
 
         self.background = False   # This will always be False unless in UIWithTray
 
@@ -73,7 +74,7 @@ class UI:
         self.current_screen = screen_type(self.root, self)
 
     def error_hook(self, e: MjsError):
-        error_title = tr("error.{}.title").format(e.TEXT_KEY)
+        error_title = tr("error.{}.title".format(e.TEXT_KEY))
         error_text = tr("error.{}.code.{}".format(e.TEXT_KEY, e.args[0]))
         if not error_text:
             error_text = tr("error.{}.default".format(e.TEXT_KEY)) + "\n"
@@ -87,7 +88,7 @@ class UIWithTray(UI):
         super().__init__()
         self.tray_menu = pystray.Menu(MenuItem(tr("tray.show"), self.show_from_tray),
                                       MenuItem(tr("tray.quit"), self.quit_from_tray))
-        self.tray_icon = pystray.Icon("MjsClient", Image.open("assets/tray.png"), tr("title"), self.tray_menu)
+        self.tray_icon = pystray.Icon("MjsClient", Image.open("assets/icon.png"), tr("title"), self.tray_menu)
         self.tray_icon.run_detached()
         self.root.protocol("WM_DELETE_WINDOW", self.hide)
 

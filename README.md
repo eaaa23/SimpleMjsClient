@@ -82,4 +82,6 @@ Every time the app launch, log files out of 7 days will be automatically removed
 
 ### Windows
 
-- Yet to be developed.
+- Install `pyinstaller` with `pip install pyinstaller`
+- Run `python pack_exe.py`
+- Output file is `LiteSoul.zip`. Download and extract this file to install this program.
