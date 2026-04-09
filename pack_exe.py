@@ -4,7 +4,7 @@ import zipfile
 
 import PyInstaller.__main__
 
-PyInstaller.__main__.run(["LiteSoul.py", "--onefile", "--windowed", "--ico=assets/tray.png"])
+PyInstaller.__main__.run(["LiteSoul.py", "--onefile", "--windowed", "--ico=assets/icon.png"])
 
 shutil.move("dist/LiteSoul.exe", "LiteSoul.exe")
 
