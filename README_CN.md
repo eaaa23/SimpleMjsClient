@@ -75,4 +75,6 @@
 
 ### Windows
 
-- 仍在开发中。
+- 安装 `pyinstaller`： `pip install pyinstaller`
+- 运行 `python pack_exe.py`
+- 输出文件为 `LiteSoul.zip`，用户可以下载并解压此压缩包来安装本程序。

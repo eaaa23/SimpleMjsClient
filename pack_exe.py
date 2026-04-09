@@ -11,6 +11,7 @@ shutil.move("dist/LiteSoul.exe", "LiteSoul.exe")
 z = zipfile.ZipFile("LiteSoul.zip", 'w')
 z.write("LiteSoul.exe")
 
+
 def add_folder(zipf, folder_name: str):
     for root, dirs, files in os.walk(folder_name):
         for file in files:
